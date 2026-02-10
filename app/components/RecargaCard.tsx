@@ -54,12 +54,15 @@ export default function RecargaCard() {
                     <p className="text-gray-500 text-sm mb-4">{item.desc}</p>
                     <p className="text-3xl font-black text-blue-600 mb-6">{item.precio}</p>
 
+
                     <button
                         onClick={(e) => { e.stopPropagation(); enviarWhatsApp(item.nombre); }}
-                        className="w-full bg-indigo-600 hover:bg-indigo-700 hover:scale-[1.02] active:scale-95 text-white font-bold py-4 rounded-2xl shadow-lg transition-all duration-200"
+                        className="w-full bg-[#009739] hover:bg-[#007b2e] text-[#FEDD00] font-black py-4 rounded-xl shadow-md transform transition-all active:scale-95 flex items-center justify-center gap-2"
                     >
-                        Solicitar Recarga
+                        <span className="text-xl">➔</span> SOLICITAR AHORA
+
                     </button>
+
                 </div>
             ))}
         </div>
