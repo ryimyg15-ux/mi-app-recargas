@@ -1,112 +1,111 @@
+'use client';
 import RecargaCard from './components/RecargaCard';
 
 export default function Home() {
     return (
-        // Contenedor principal con el degradado de fondo
-        <main className="min-h-screen bg-gradient-to-b from-[#002A8F] via-[#f8fafc] to-white">
+        <main className="min-h-screen bg-[#0F172A] relative overflow-hidden font-sans">
+            {/* Fondo Decorativo Estilo Bandera */}
+            <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none opacity-20">
+                <div className="absolute -top-[10%] -left-[10%] w-[60%] h-[60%] bg-[#009739] rounded-full blur-[150px]"></div>
+                <div className="absolute top-[20%] -right-[10%] w-[50%] h-[50%] bg-[#CF142B] rounded-full blur-[150px]"></div>
+                <div className="absolute -bottom-[10%] left-[20%] w-[70%] h-[50%] bg-[#002A8F] rounded-full blur-[150px]"></div>
+            </div>
 
-            {/* 1. ENCABEZADO (HEADER) */}
-            <header className="relative pt-8 pb-20 px-4 overflow-hidden">
-                {/* Luces decorativas */}
-                <div className="absolute top-0 left-1/4 w-72 h-72 bg-blue-500/20 rounded-full blur-[100px]"></div>
-                <div className="absolute bottom-0 right-1/4 w-48 h-48 bg-green-500/10 rounded-full blur-[80px]"></div>
-
-                {/* Banderas decorativas superiores */}
-                <div className="absolute top-0 left-0 w-full h-1 flex">
-                    <div className="flex-1 bg-[#009739]"></div>
-                    <div className="flex-1 bg-[#FEDD00]"></div>
-                    <div className="flex-1 bg-[#002A8F]"></div>
-                    <div className="flex-1 bg-[#CF142B]"></div>
-                </div>
-
-                <div className="relative max-w-6xl mx-auto">
-                    {/* Navegación */}
-                    <nav className="flex justify-between items-center mb-10">
-                        <div className="flex items-center gap-2">
-                            <div className="w-8 h-8 bg-white rounded-lg flex items-center justify-center shadow-lg">
-                                <span className="text-[#002A8F] font-black text-lg">N</span>
-                            </div>
-                            <span className="text-white font-bold tracking-tighter text-xl">
-                                NEXUS <span className="text-blue-300 font-light">R&DAY</span>
-                            </span>
+            <div className="relative z-10 max-w-6xl mx-auto px-6 py-10">
+                {/* Header Minimalista */}
+                <nav className="flex justify-between items-center mb-16">
+                    <div className="flex items-center gap-3">
+                        <div className="w-12 h-12 bg-white rounded-2xl flex items-center justify-center shadow-[0_0_20px_rgba(255,255,255,0.3)]">
+                            <span className="text-[#002A8F] font-black text-2xl">N</span>
                         </div>
-                        <div className="hidden md:flex gap-6 text-blue-100/70 text-xs font-bold uppercase tracking-widest">
+                        <div>
+                            <h1 className="text-white font-black tracking-tighter text-2xl leading-none">NEXUS</h1>
+                            <span className="text-blue-400 text-[10px] font-bold tracking-[0.3em] uppercase">R&DAY Premium</span>
+                        </div>
+                    </div>
+
+                    <div className="hidden md:flex items-center gap-8">
+                        <div className="flex gap-6 text-[11px] font-bold text-slate-400 tracking-widest uppercase">
                             <span className="hover:text-white cursor-pointer transition-colors">Servicios</span>
                             <span className="hover:text-white cursor-pointer transition-colors">Nosotros</span>
-                            <span className="border border-white/20 px-3 py-1 rounded-full text-white bg-white/5">SOPORTE 24/7</span>
                         </div>
-                    </nav>
+                        <button className="bg-white/10 hover:bg-white/20 border border-white/20 px-6 py-2 rounded-full text-white text-[10px] font-black tracking-widest transition-all">
+                            SOPORTE 24/7
+                        </button>
+                    </div>
+                </nav>
 
-                    {/* Contenido Hero */}
-                    <div className="grid md:grid-cols-2 gap-8 items-center mb-10">
-                        <div>
-                            <div className="inline-flex items-center gap-2 bg-white/5 border border-white/10 backdrop-blur-md px-3 py-1 rounded-full mb-4">
-                                <span className="relative flex h-2 w-2">
-                                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
-                                    <span className="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span>
-                                </span>
-                                <span className="text-[10px] font-black text-blue-100 tracking-[0.2em] uppercase">Sistema Live</span>
-                            </div>
-
-                            <h1 className="text-4xl md:text-5xl font-black text-white leading-tight mb-4">
-                                Conectando <span className="text-blue-300">Mundos</span> <br />
-                                en Segundos.
-                            </h1>
-
-                            <p className="text-sm md:text-base text-blue-100/70 font-medium leading-relaxed max-w-sm">
-                                Premium Hub de recargas para Cuba desde Brasil y Europa.
-                                Rapidez garantizada y seguridad bancaria.
-                            </p>
+                {/* Hero Section */}
+                <div className="grid lg:grid-cols-2 gap-16 items-center mb-12">
+                    <div className="text-left">
+                        <div className="inline-flex items-center gap-2 bg-blue-500/10 border border-blue-500/20 px-4 py-1.5 rounded-full mb-8">
+                            <span className="w-2 h-2 bg-blue-500 rounded-full animate-pulse"></span>
+                            <span className="text-blue-400 text-[10px] font-black uppercase tracking-[0.2em]">Global Connection System</span>
                         </div>
 
-                        {/* Widgets de Confianza */}
-                        <div className="hidden md:flex gap-4">
-                            <div className="flex-1 bg-white/5 border border-white/10 backdrop-blur-md p-4 rounded-3xl text-center">
-                                <p className="text-white font-bold text-sm mb-1">PIX Inmediato</p>
-                                <p className="text-blue-200/50 text-[10px] uppercase font-bold tracking-widest">Brasil</p>
+                        <h2 className="text-5xl md:text-7xl font-black text-white leading-[1.1] mb-8 italic tracking-tighter">
+                            Conectando <br />
+                            <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 via-white to-green-400">
+                Mundos.
+              </span>
+                        </h2>
+
+                        <p className="text-slate-400 text-lg font-medium leading-relaxed max-w-md">
+                            La plataforma más rápida y segura para enviar recargas y combos a Cuba.
+                            Tecnología de punta con el respaldo de <span className="text-white font-bold italic">Nexus R&DAY</span>.
+                        </p>
+
+                        {/* Badges de Confianza */}
+                        <div className="flex gap-4 mt-10">
+                            <div className="px-5 py-3 bg-white/5 rounded-2xl border border-white/10 backdrop-blur-sm">
+                                <p className="text-white font-bold text-sm">PIX</p>
+                                <p className="text-slate-500 text-[9px] font-bold uppercase tracking-widest">Inmediato</p>
                             </div>
-                            <div className="flex-1 bg-white/5 border border-white/10 backdrop-blur-md p-4 rounded-3xl text-center">
-                                <p className="text-white font-bold text-sm mb-1">Entrega Directa</p>
-                                <p className="text-blue-200/50 text-[10px] uppercase font-bold tracking-widest">Sin Intermediarios</p>
+                            <div className="px-5 py-3 bg-white/5 rounded-2xl border border-white/10 backdrop-blur-sm">
+                                <p className="text-white font-bold text-sm">Directo</p>
+                                <p className="text-slate-500 text-[9px] font-bold uppercase tracking-widest">Sin Terceros</p>
                             </div>
                         </div>
                     </div>
 
-                    {/* Barra informativa con brillo al pasar el mouse */}
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 bg-white/10 backdrop-blur-xl border border-white/10 p-4 rounded-[30px] transition-all duration-500 hover:border-white/30">
-                        <div className="flex items-center gap-4 px-4 py-2 border-b md:border-b-0 md:border-r border-white/10 group cursor-default">
-                            <span className="text-blue-400 text-xl font-bold italic transition-transform duration-300 group-hover:scale-125 group-hover:drop-shadow-[0_0_8px_rgba(96,165,250,0.6)]">01</span>
-                            <p className="text-white text-xs font-bold uppercase tracking-tighter opacity-80 group-hover:opacity-100 transition-opacity">Procesado en minutos</p>
-                        </div>
-                        <div className="flex items-center gap-4 px-4 py-2 border-b md:border-b-0 md:border-r border-white/10 group cursor-default">
-                            <span className="text-green-400 text-xl font-bold italic transition-transform duration-300 group-hover:scale-125 group-hover:drop-shadow-[0_0_8px_rgba(74,222,128,0.6)]">02</span>
-                            <p className="text-white text-xs font-bold uppercase tracking-tighter opacity-80 group-hover:opacity-100 transition-opacity">Pago PIX o SEPA/IBAN</p>
-                        </div>
-                        <div className="flex items-center gap-4 px-4 py-2 group cursor-default">
-                            <span className="text-yellow-400 text-xl font-bold italic transition-transform duration-300 group-hover:scale-125 group-hover:drop-shadow-[0_0_8px_rgba(250,204,21,0.6)]">03</span>
-                            <p className="text-white text-xs font-bold uppercase tracking-tighter opacity-80 group-hover:opacity-100 transition-opacity">Tasa: 1€ = 5.50 BRL</p>
+                    {/* El Configurador (RecargaCard) */}
+                    <div className="relative group">
+                        {/* Brillo de fondo para la tarjeta */}
+                        <div className="absolute -inset-1 bg-gradient-to-r from-blue-600 to-green-600 rounded-[45px] blur opacity-25 group-hover:opacity-40 transition duration-1000"></div>
+
+                        <div className="relative bg-[#F1F5F9] rounded-[40px] shadow-2xl overflow-hidden transition-all duration-500 transform hover:scale-[1.01]">
+                            <RecargaCard />
                         </div>
                     </div>
                 </div>
-            </header>
 
-            {/* 2. SECCIÓN DEL CONFIGURADOR (IMPORTANTE) */}
-            <section className="relative -mt-12 px-4 pb-20 z-20">
-                <div className="max-w-4xl mx-auto drop-shadow-[0_20px_50px_rgba(0,42,143,0.15)]">
-                    {/* Aquí invocamos el componente */}
-                    <RecargaCard />
+                {/* Barra Informativa Estilo Banner */}
+                <div className="grid md:grid-cols-3 gap-6 bg-white/5 border border-white/10 rounded-[35px] p-2 backdrop-blur-md">
+                    <div className="flex items-center gap-5 p-5 bg-white/5 rounded-[28px] border border-white/5">
+                        <span className="text-blue-500 font-black text-2xl italic tracking-tighter">01</span>
+                        <p className="text-white text-[10px] font-black uppercase tracking-widest leading-tight">Procesado en <br/> cuestión de minutos</p>
+                    </div>
+                    <div className="flex items-center gap-5 p-5 bg-white/5 rounded-[28px] border border-white/5">
+                        <span className="text-green-500 font-black text-2xl italic tracking-tighter">02</span>
+                        <p className="text-white text-[10px] font-black uppercase tracking-widest leading-tight">Pagos por PIX <br/> o SEPA/IBAN</p>
+                    </div>
+                    <div className="flex items-center gap-5 p-5 bg-white/5 rounded-[28px] border border-white/5">
+                        <span className="text-yellow-500 font-black text-2xl italic tracking-tighter">03</span>
+                        <p className="text-white text-[10px] font-black uppercase tracking-widest leading-tight">Tasa Oficial: <br/> 1 EUR = 5.50 BRL</p>
+                    </div>
                 </div>
-            </section>
 
-            {/* 3. FOOTER */}
-            <footer className="py-12 text-center text-slate-400">
-                <div className="flex justify-center gap-6 mb-4 opacity-20 grayscale text-sm font-black">
-                    <span>PIX</span><span>ZELLE</span><span>ETECSA</span><span>IBAN</span>
-                </div>
-                <p className="text-[10px] font-bold uppercase tracking-[0.2em]">
-                    © 2026 Nexus R&DAY • Tecnología en Recargas Internacionales
-                </p>
-            </footer>
+                <footer className="mt-20 py-8 border-t border-white/5 flex flex-col md:flex-row justify-between items-center gap-6">
+                    <p className="text-slate-500 text-[10px] font-bold uppercase tracking-[0.3em]">
+                        © 2026 Nexus R&DAY • Premium Connectivity
+                    </p>
+                    <div className="flex gap-8 opacity-20 grayscale">
+                        <span className="text-white text-xl font-black italic">PIX</span>
+                        <span className="text-white text-xl font-black italic">ZELLE</span>
+                        <span className="text-white text-xl font-black italic">ETECSA</span>
+                    </div>
+                </footer>
+            </div>
         </main>
     );
 }
