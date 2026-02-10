@@ -65,15 +65,15 @@ export default function RecargaCard() {
         playSound();
         const telefono = "+5547999222521";
         const mensajeTexto = `Hola Nexus R&DAY 🚀
-Quiero hacer una recarga móvil.
-
-📱 *Tipo de servicio:* ${servicio}
-🇧🇷 *Origen del pago:* ${pago}
-✅ *Recarga seleccionada:* ${ofertaSeleccionada?.nombre}
-💰 *Monto:* ${ofertaSeleccionada?.precio}
-☎️ *Número a recargar:* +53 ${numero}
-
-🌐 Vengo desde: nexusR&DAY.com`;
+        Quiero hacer una recarga móvil.
+        
+        📱 *Tipo de servicio:* ${servicio}
+        🇧🇷 *Origen del pago:* ${pago}
+        ✅ *Recarga seleccionada:* ${ofertaSeleccionada?.nombre}
+        💰 *Monto:* ${ofertaSeleccionada?.precio}
+        ☎ *Número a recargar:* +53 ${numero}
+        
+        🌐 Vengo desde: NEXUS-R&DAY`;
 
         window.open(`https://wa.me/${telefono}?text=${encodeURIComponent(mensajeTexto)}`, '_blank');
     };
