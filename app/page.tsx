@@ -9,6 +9,24 @@ export default function Home() {
                 <div className="absolute top-0 left-1/4 w-72 h-72 bg-blue-500/20 rounded-full blur-[100px]"></div>
                 <div className="absolute bottom-0 right-1/4 w-48 h-48 bg-green-500/10 rounded-full blur-[80px]"></div>
 
+                {/* Barra informativa compacta con efecto de brillo */}
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 bg-white/10 backdrop-blur-xl border border-white/10 p-4 rounded-[30px] transition-all duration-500 hover:border-white/30">
+                    <div className="flex items-center gap-4 px-4 py-2 border-b md:border-b-0 md:border-r border-white/10 group cursor-default">
+                        <span className="text-blue-400 text-xl font-bold italic transition-transform duration-300 group-hover:scale-125 group-hover:drop-shadow-[0_0_8px_rgba(96,165,250,0.6)]">01</span>
+                        <p className="text-white text-xs font-bold uppercase tracking-tighter opacity-80 group-hover:opacity-100 transition-opacity">Procesado en minutos</p>
+                    </div>
+
+                    <div className="flex items-center gap-4 px-4 py-2 border-b md:border-b-0 md:border-r border-white/10 group cursor-default">
+                        <span className="text-green-400 text-xl font-bold italic transition-transform duration-300 group-hover:scale-125 group-hover:drop-shadow-[0_0_8px_rgba(74,222,128,0.6)]">02</span>
+                        <p className="text-white text-xs font-bold uppercase tracking-tighter opacity-80 group-hover:opacity-100 transition-opacity">Pago PIX o SEPA/IBAN</p>
+                    </div>
+
+                    <div className="flex items-center gap-4 px-4 py-2 group cursor-default">
+                        <span className="text-yellow-400 text-xl font-bold italic transition-transform duration-300 group-hover:scale-125 group-hover:drop-shadow-[0_0_8px_rgba(250,204,21,0.6)]">03</span>
+                        <p className="text-white text-xs font-bold uppercase tracking-tighter opacity-80 group-hover:opacity-100 transition-opacity">Tasa: 1€ = 5.50 BRL</p>
+                    </div>
+                </div>
+
                 {/* Línea superior decorativa */}
                 <div className="absolute top-0 left-0 w-full h-1 flex">
                     <div className="flex-1 bg-[#009739]"></div>
