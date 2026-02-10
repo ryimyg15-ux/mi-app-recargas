@@ -37,7 +37,6 @@ export default function RecargaCard() {
             }
         });
 
-        // Tasas de cambio (Puedes mover esto a tu Excel después)
         setTasas({
             'Brasil (PIX)': 1.0,
             'EE.UU (Zelle)': 0.18,
@@ -46,7 +45,12 @@ export default function RecargaCard() {
     }, []);
 
     const calcularPrecio = (precioBase: string) => {
-        const numBase = parseFloat(precioBase.replace(/[^0-9.]/g, ''));
+        // Limpiamos el texto: manejamos comas y quitamos todo lo que no sea número o punto
+        const limpio = precioBase.replace(',', '.').replace(/[^0-9.]/g, '');
+        const numBase = parseFloat(limpio);
+
+        if (isNaN(numBase)) return precioBase;
+
         const tasaActual = tasas[pago] || 1.0;
         const total = (numBase * tasaActual).toFixed(2);
 
@@ -62,7 +66,6 @@ export default function RecargaCard() {
         setOfertaSeleccionada(filtradas.length > 0 ? filtradas[0] : null);
     }, [servicio, todasLasOfertas]);
 
-    // Función de estilo dinámico (Ahora fuera del return)
     const getEstiloBoton = () => {
         if (pago.includes('Brasil')) return 'from-[#009739] to-[#007b2e] shadow-green-200';
         if (pago.includes('EE.UU')) return 'from-[#002A8F] to-[#001f6d] shadow-blue-200';
@@ -92,7 +95,7 @@ Quiero hacer una recarga móvil.
             <div className="p-8 md:p-12">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
 
-                    {/* COLUMNA IZQUIERDA: CONFIGURACIÓN */}
+                    {/* COLUMNA IZQUIERDA */}
                     <div className="space-y-8">
                         <div>
                             <label className="text-xs font-black text-blue-900/40 uppercase tracking-[0.2em] mb-4 block">1. Configuración</label>
@@ -116,7 +119,7 @@ Quiero hacer una recarga móvil.
                             <select
                                 value={pago}
                                 onChange={(e) => setPago(e.target.value)}
-                                className="w-full p-5 rounded-2xl bg-slate-900 text-white font-bold outline-none ring-offset-2 focus:ring-2 focus:ring-blue-500 transition-all"
+                                className="w-full p-5 rounded-2xl bg-slate-900 text-white font-bold outline-none ring-offset-2 focus:ring-2 focus:ring-blue-500 transition-all cursor-pointer"
                             >
                                 <option>Brasil (PIX)</option>
                                 <option>EE.UU (Zelle)</option>
@@ -125,10 +128,10 @@ Quiero hacer una recarga móvil.
                         </div>
                     </div>
 
-                    {/* COLUMNA DERECHA: OFERTAS */}
+                    {/* COLUMNA DERECHA */}
                     <div className="space-y-6">
                         <label className="text-xs font-black text-blue-900/40 uppercase tracking-[0.2em] mb-4 block">3. Ofertas Disponibles</label>
-                        <div className="grid gap-3 max-h-[300px] overflow-y-auto pr-2">
+                        <div className="grid gap-3 max-h-[300px] overflow-y-auto pr-2 custom-scrollbar">
                             {ofertasFiltradas.map((item, index) => (
                                 <div
                                     key={index}
@@ -144,7 +147,7 @@ Quiero hacer una recarga móvil.
                                         </div>
                                         <div className="text-right ml-4">
                                             <p className="text-blue-600 font-black text-lg whitespace-nowrap">{calcularPrecio(item.precio)}</p>
-                                            <p className="text-[8px] text-slate-400 uppercase tracking-tighter">Tasa Nexus</p>
+                                            <p className="text-[8px] text-slate-400 uppercase tracking-tighter font-bold">Tasa Nexus</p>
                                         </div>
                                     </div>
                                 </div>
@@ -167,8 +170,8 @@ Quiero hacer una recarga móvil.
                     </div>
                 </div>
 
-                {/* Aviso de Seguridad */}
-                <div className="mt-8 flex items-center justify-center gap-3 p-4 bg-blue-50/50 rounded-2xl border border-blue-100/50">
+                {/* --- AVISO DE SEGURIDAD --- */}
+                <div className="mt-12 flex items-center justify-center gap-3 p-4 bg-blue-50/50 rounded-2xl border border-blue-100/50">
                     <div className="relative flex h-3 w-3">
                         <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
                         <span className="relative inline-flex rounded-full h-3 w-3 bg-blue-500"></span>
@@ -178,11 +181,10 @@ Quiero hacer una recarga móvil.
                     </p>
                 </div>
 
-                {/* Aquí debajo ya iría tu <button onClick={enviarWhatsApp}... */}
-                {/* BOTÓN FINAL CON ESTILO DINÁMICO */}
+                {/* BOTÓN FINAL DINÁMICO */}
                 <button
                     onClick={enviarWhatsApp}
-                    className={`w-full mt-12 bg-gradient-to-r ${getEstiloBoton()} text-white font-black py-6 rounded-[25px] shadow-2xl transition-all duration-500 active:scale-95 text-xl tracking-widest flex items-center justify-center gap-3`}
+                    className={`w-full mt-6 bg-gradient-to-r ${getEstiloBoton()} text-white font-black py-6 rounded-[25px] shadow-2xl transition-all duration-500 active:scale-95 text-xl tracking-widest flex items-center justify-center gap-3`}
                 >
                     {pago.includes('Brasil') && <span>🇧🇷</span>}
                     {pago.includes('EE.UU') && <span>🇺🇸</span>}
@@ -191,7 +193,7 @@ Quiero hacer una recarga móvil.
                 </button>
 
                 <p className="text-center mt-6 text-[10px] text-slate-400 font-bold uppercase tracking-widest">
-                    🔒 Transacción protegida por cifrado Nexus R&DAY
+                    🔒 Conexión segura certificada para Nexus R&DAY
                 </p>
             </div>
         </div>
