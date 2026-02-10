@@ -10,7 +10,7 @@ export default function Home() {
               🚀 Recargas Instantáneas a Cuba
             </div>
             <h1 className="text-5xl font-black text-white tracking-tight mb-4">
-              TU <span className="text-yellow-400">NEGOCIO</span> NAME
+              NESUS <span className="text-yellow-400">R&</span> DAY
             </h1>
             <p className="text-blue-100 text-xl font-light max-w-xl mx-auto">
               La forma más rápida y segura de enviar saldo a los tuyos.
