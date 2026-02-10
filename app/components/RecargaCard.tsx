@@ -92,7 +92,7 @@ export default function RecargaCard() {
                     {/* COLUMNA 1: SERVICIOS */}
                     <div className="space-y-2">
                         <label className="text-[9px] font-black text-slate-400 uppercase">1. Operación</label>
-                        {['Recarga a Cuba (ETECSA)', 'Combo de Comida/Aseo', 'Envío de Dinero'].map(s => (
+                        {['Recarga (ETECSA)', 'Recarga (NAUTA)','Combo de Comida/Aseo', 'Envío de Dinero'].map(s => (
                             <button key={s} onClick={() => setServicio(s)}
                                     className={`w-full text-left px-3 py-2 rounded-lg text-[9px] font-black transition-all border ${
                                         servicio === s ? 'bg-[#002A8F] text-white border-[#002A8F]' : 'bg-slate-50 text-slate-400 border-slate-100 hover:bg-slate-100'
