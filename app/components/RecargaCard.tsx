@@ -12,8 +12,12 @@ interface Oferta {
 
 export default function RecargaCard() {
     const [ofertas, setOfertas] = useState<Oferta[]>([]);
+    // Estados para las selecciones del usuario
+    const [servicio, setServicio] = useState('Recarga a Cuba (ETECSA)');
+    const [pago, setPago] = useState('Brasil (PIX)');
+    const [ofertaSeleccionada, setOfertaSeleccionada] = useState<Oferta | null>(null);
+    const [numero, setNumero] = useState('');
 
-    // 1. Cargar datos de Google Sheets
     useEffect(() => {
         const SHEET_ID = '1x4ClX7vmGGsfn2U7YmcS7Uq5VQm88-haaOvBDGsvvQs';
         const URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv`;
@@ -22,82 +26,128 @@ export default function RecargaCard() {
             download: true,
             header: true,
             complete: (results) => {
-                setOfertas(results.data as Oferta[]);
+                const data = results.data as Oferta[];
+                setOfertas(data);
+                if (data.length > 0) setOfertaSeleccionada(data[0]);
             },
         });
     }, []);
 
-    // 2. Función para el sonido
     const playSound = () => {
         const audio = new Audio('https://assets.mixkit.co/active_storage/sfx/2568/2568-preview.mp3');
         audio.volume = 0.5;
-        audio.play().catch(e => console.log("Audio play blocked")); // Evita error si el navegador bloquea audio
+        audio.play().catch(() => {});
     };
 
-    // 3. Función de WhatsApp mejorada
-    const enviarWhatsApp = (oferta: string) => {
+    const enviarWhatsApp = () => {
+        if (!numero || numero.length < 8) {
+            alert("Por favor, introduce un número de teléfono válido");
+            return;
+        }
+
         playSound();
 
         const telefono = "+5547999222521";
         const mensajeTexto = `Hola Nexus R&DAY 🚀
 Quiero hacer una recarga móvil.
 
-📱 *Tipo de servicio:* Recarga a Cuba (ETECSA)
-🇧🇷 *Origen del pago:* Brasil (PIX)
-✅ *Recarga seleccionada:* ${oferta}
-💰 *Monto:* A consultar (recarga personalizada)
-☎️ *Número a recargar:* +53 ...
+📱 *Tipo de servicio:* ${servicio}
+🇧🇷 *Origen del pago:* ${pago}
+✅ *Recarga seleccionada:* ${ofertaSeleccionada?.nombre}
+💰 *Monto:* ${ofertaSeleccionada?.precio}
+☎️ *Número a recargar:* +53 ${numero}
 
 🌐 Vengo desde: nexusR&DAY.com`;
 
         const mensajeEncoded = encodeURIComponent(mensajeTexto);
-
         setTimeout(() => {
             window.open(`https://wa.me/${telefono}?text=${mensajeEncoded}`, '_blank');
         }, 150);
     };
 
     return (
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-8">
-            {ofertas.map((item, index) => (
-                <div
-                    key={index}
-                    className="relative p-6 rounded-3xl border-2 border-transparent bg-white shadow-lg hover:shadow-2xl hover:border-[#009739]/30 transition-all duration-300 group flex flex-col justify-between"
-                >
-                    {item.popular === 'true' && (
-                        <span className="absolute -top-3 right-6 bg-[#FEDD00] text-[#009739] text-[10px] px-3 py-1 rounded-full font-black uppercase shadow-md border border-[#009739] z-10">
-                            ⭐ Destaque
-                        </span>
-                    )}
+        <div className="max-w-4xl mx-auto bg-white rounded-3xl shadow-2xl overflow-hidden border border-gray-100">
+            <div className="p-8">
+                <h2 className="text-2xl font-black text-blue-900 mb-6 flex items-center gap-2">
+                    <span className="bg-yellow-400 p-2 rounded-lg text-lg">📝</span> Configura tu Envío
+                </h2>
 
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    {/* 1. Tipo de Servicio */}
                     <div>
-                        <h3 className="text-xl font-bold text-gray-800 group-hover:text-[#002A8F] transition-colors">
-                            {item.nombre}
-                        </h3>
-                        <p className="text-gray-500 text-xs mt-1 mb-4 h-10 overflow-hidden line-clamp-2">
-                            {item.desc}
-                        </p>
+                        <label className="block text-xs font-bold text-gray-400 uppercase mb-2">1. Tipo de Servicio</label>
+                        <select
+                            value={servicio}
+                            onChange={(e) => setServicio(e.target.value)}
+                            className="w-full p-4 rounded-xl bg-slate-50 border-2 border-transparent focus:border-blue-500 outline-none transition-all font-medium"
+                        >
+                            <option>Recarga a Cuba (ETECSA)</option>
+                            <option>Recarga Nauta (Internet)</option>
+                            <option>Combo de Comida/Aseo</option>
+                        </select>
+                    </div>
 
-                        <div className="flex items-center justify-between mb-6 bg-slate-50 p-3 rounded-xl border border-dashed border-gray-300">
-                            <div className="flex flex-col">
-                                <span className="text-[10px] uppercase text-gray-400 font-bold">Precio</span>
-                                <p className="text-3xl font-black text-[#002A8F]">{item.precio}</p>
-                            </div>
-                            <div className="flex -space-x-2">
-                                <span className="text-2xl shadow-sm bg-white rounded-full w-8 h-8 flex items-center justify-center border border-gray-100">🇧🇷</span>
-                                <span className="text-2xl shadow-sm bg-white rounded-full w-8 h-8 flex items-center justify-center border border-gray-100">🇨🇺</span>
-                            </div>
+                    {/* 2. Origen del Pago */}
+                    <div>
+                        <label className="block text-xs font-bold text-gray-400 uppercase mb-2">2. Origen del Pago</label>
+                        <select
+                            value={pago}
+                            onChange={(e) => setPago(e.target.value)}
+                            className="w-full p-4 rounded-xl bg-slate-50 border-2 border-transparent focus:border-green-500 outline-none transition-all font-medium"
+                        >
+                            <option>Brasil (PIX)</option>
+                            <option>Brasil (Transferencia)</option>
+                            <option>EE.UU (Zelle/Card)</option>
+                            <option>Europa (Euros)</option>
+                        </select>
+                    </div>
+
+                    {/* 3. Selección de Oferta (Viene de Google Sheets) */}
+                    <div className="md:col-span-2">
+                        <label className="block text-xs font-bold text-gray-400 uppercase mb-2">3. Selecciona la Oferta</label>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                            {ofertas.map((item, index) => (
+                                <div
+                                    key={index}
+                                    onClick={() => setOfertaSeleccionada(item)}
+                                    className={`cursor-pointer p-4 rounded-xl border-2 transition-all ${
+                                        ofertaSeleccionada?.nombre === item.nombre
+                                            ? 'border-[#009739] bg-green-50 shadow-inner'
+                                            : 'border-gray-100 bg-white hover:border-gray-300'
+                                    }`}
+                                >
+                                    <p className="font-bold text-sm text-gray-800">{item.nombre}</p>
+                                    <p className="text-[#002A8F] font-black">{item.precio}</p>
+                                </div>
+                            ))}
                         </div>
                     </div>
 
-                    <button
-                        onClick={(e) => { e.stopPropagation(); enviarWhatsApp(item.nombre); }}
-                        className="w-full bg-[#009739] hover:bg-[#007b2e] text-[#FEDD00] font-black py-4 rounded-xl shadow-md transform transition-all active:scale-90 hover:scale-[1.05] flex items-center justify-center gap-2"
-                    >
-                        <span className="text-xl">➔</span> SOLICITAR AHORA
-                    </button>
+                    {/* 4. Número a Recargar */}
+                    <div className="md:col-span-2">
+                        <label className="block text-xs font-bold text-gray-400 uppercase mb-2">4. Número de Teléfono (+53)</label>
+                        <div className="relative">
+                            <span className="absolute left-4 top-1/2 -translate-y-1/2 font-bold text-gray-400 border-r pr-3">+53</span>
+                            <input
+                                type="number"
+                                placeholder="5XXXXXXX"
+                                value={numero}
+                                onChange={(e) => setNumero(e.target.value)}
+                                className="w-full p-4 pl-16 rounded-xl bg-slate-50 border-2 border-transparent focus:border-red-500 outline-none transition-all font-bold text-lg"
+                            />
+                        </div>
+                        <p className="text-[10px] text-gray-400 mt-2 ml-1 italic">* Verificamos el número antes de procesar el pago.</p>
+                    </div>
                 </div>
-            ))}
+
+                {/* Botón Final */}
+                <button
+                    onClick={enviarWhatsApp}
+                    className="w-full mt-8 bg-[#009739] hover:bg-[#007b2e] text-[#FEDD00] font-black py-5 rounded-2xl shadow-xl transform transition-all active:scale-95 hover:scale-[1.01] flex items-center justify-center gap-3 text-xl"
+                >
+                    🚀 ENVIAR RECARGA AHORA
+                </button>
+            </div>
         </div>
     );
 }
