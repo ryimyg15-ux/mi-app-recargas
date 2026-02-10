@@ -136,7 +136,7 @@ Quiero hacer una recarga móvil.
                     {/* ... (Todo el contenido del formulario que ya teníamos se mantiene igual) ... */}
                     <div className="space-y-8">
                         <div>
-                            <label className="text-xs font-black text-blue-900/40 uppercase tracking-[0.2em] mb-4 block">1. Configuración</label>
+                            <label className="text-xs font-black text-blue-900/40 uppercase tracking-[0.2em] mb-4 block">1. Servicios Asociados</label>
                             <div className="space-y-3">
                                 {['Recarga a Cuba (ETECSA)', 'Recarga Nauta (Internet)', 'Combo de Comida/Aseo'].map((s) => (
                                     <button
