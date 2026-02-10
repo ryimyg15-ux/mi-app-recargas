@@ -11,14 +11,29 @@ export default function RecargaCard() {
     const [ofertaSeleccionada, setOfertaSeleccionada] = useState<any>(null);
     const [numero, setNumero] = useState('');
 
+    // Estados para Remesas
+    const [montoRemesa, setMontoRemesa] = useState<number>(100);
+    const [tasaCup, setTasaCup] = useState<number>(55); // 55 como respaldo
+
     useEffect(() => {
         const SHEET_ID = '1x4ClX7vmGGsfn2U7YmcS7Uq5VQm88-haaOvBDGsvvQs';
         const URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&gid=0`;
+
         Papa.parse(URL, {
             download: true, header: true,
             complete: (res: any) => {
-                const data = res.data.filter((o: any) => o.nombre); // Limpiar filas vacías
+                const data = res.data.filter((o: any) => o.nombre);
                 setTodasLasOfertas(data);
+
+                // BUSCAR TASA: Busca la fila "Transferencia a Cuba"
+                const filaTasa = data.find((o: any) =>
+                    o.nombre.trim().toLowerCase() === 'transferencia a cuba'
+                );
+                if (filaTasa) {
+                    const valor = parseFloat(filaTasa.precio.replace(',', '.').replace(/[^0-9.]/g, ''));
+                    if (!isNaN(valor)) setTasaCup(valor);
+                }
+
                 const iniciales = data.filter((o: any) => o.categoria === servicio);
                 setOfertasFiltradas(iniciales);
                 setOfertaSeleccionada(iniciales[0]);
@@ -26,7 +41,7 @@ export default function RecargaCard() {
         });
     }, []);
 
-    // LÓGICA DE SELECCIÓN ÚNICA: Al cambiar servicio, se resetea a la primera oferta
+    // Sincronizar ofertas al cambiar de servicio
     useEffect(() => {
         const filtradas = todasLasOfertas.filter(o => o.categoria === servicio);
         setOfertasFiltradas(filtradas);
@@ -47,107 +62,113 @@ export default function RecargaCard() {
     };
 
     const enviarPedido = () => {
-        if (!numero || numero.length < 8) return alert("Por favor, ingrese un número válido.");
-        const mensaje = `*NEXUS R&DAY - NUEVO PEDIDO*\n\n` +
-            `🔹 *Servicio:* ${servicio}\n` +
-            `🔹 *Oferta:* ${ofertaSeleccionada?.nombre}\n` +
-            `🔹 *Pago:* ${pago}\n` +
-            `🔹 *Total:* ${calcularPrecio(ofertaSeleccionada?.precio)}\n` +
-            `🔹 *Número:* +53 ${numero}`;
+        if (!numero) return alert("Por favor, indique el número o tarjeta del beneficiario.");
+
+        const detalle = servicio === 'Envío de Dinero'
+            ? `💸 REMESA\n💰 Entrega: ${montoRemesa} BRL\n🇨🇺 Recibe: ${(montoRemesa * tasaCup).toLocaleString()} CUP\n📈 Tasa: 1 BRL = ${tasaCup} CUP`
+            : `🛒 PRODUCTO: ${ofertaSeleccionada?.nombre}\n💵 TOTAL: ${calcularPrecio(ofertaSeleccionada?.precio)}`;
+
+        const mensaje = `*NEXUS R&DAY - ORDEN REGISTRADA*\n\n` +
+            `👤 *Operación:* ${servicio}\n` +
+            `💳 *Método:* ${pago}\n` +
+            `${detalle}\n` +
+            `📍 *Beneficiario:* ${numero}`;
+
         window.open(`https://wa.me/5547999222521?text=${encodeURIComponent(mensaje)}`, '_blank');
     };
 
     return (
-        <div className="bg-white text-slate-900">
-            {/* Cabecera Interna de la Tarjeta */}
-            <div className="bg-slate-900 p-4 text-center">
-                <span className="text-[10px] font-black text-white/50 uppercase tracking-[0.4em]">Configurador de Orden</span>
+        <div className="bg-white text-slate-900 rounded-3xl overflow-hidden shadow-xl border border-slate-100">
+            {/* Header Técnico */}
+            <div className="bg-slate-900 p-2 text-center">
+                <p className="text-[8px] font-black text-white/30 uppercase tracking-[0.6em]">Secure Transaction Interface</p>
             </div>
 
-            <div className="p-5 md:p-8 space-y-8">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-
-                    {/* SECCIÓN 1: SERVICIO (Estilo Cuba) */}
-                    <div className="space-y-4">
-                        <div className="flex items-center gap-2">
-                            <div className="w-1 h-4 bg-[#CF142B]"></div>
-                            <label className="text-[10px] font-black uppercase tracking-widest text-slate-500">01. Seleccione Servicio</label>
-                        </div>
-                        <div className="grid gap-2">
-                            {['Recarga a Cuba (ETECSA)', 'Recarga Nauta (Internet)', 'Combo de Comida/Aseo'].map(s => (
-                                <button key={s} onClick={() => setServicio(s)}
-                                        className={`text-left px-4 py-3 rounded-xl text-[11px] font-bold transition-all border ${
-                                            servicio === s
-                                                ? 'bg-[#002A8F] border-[#002A8F] text-white shadow-lg translate-x-1'
-                                                : 'bg-slate-50 border-slate-100 text-slate-400 hover:bg-slate-100'
-                                        }`}>
-                                    {s}
-                                </button>
-                            ))}
-                        </div>
-                    </div>
-
-                    {/* SECCIÓN 2: PAGO (Estilo Brasil) */}
-                    <div className="space-y-4">
-                        <div className="flex items-center gap-2">
-                            <div className="w-1 h-4 bg-[#009739]"></div>
-                            <label className="text-[10px] font-black uppercase tracking-widest text-slate-500">02. Método de Pago</label>
-                        </div>
-                        <div className="grid gap-2">
-                            {['Brasil (PIX)', 'EE.UU (Zelle)', 'Europa (Euros)'].map(m => (
-                                <button key={m} onClick={() => setPago(m)}
-                                        className={`text-left px-4 py-3 rounded-xl text-[11px] font-bold transition-all border ${
-                                            pago === m
-                                                ? 'bg-slate-900 border-slate-900 text-white shadow-lg ring-2 ring-[#FEDD00]/50'
-                                                : 'bg-slate-50 border-slate-100 text-slate-400 hover:bg-slate-100'
-                                        }`}>
-                                    {m}
-                                </button>
-                            ))}
-                        </div>
-                    </div>
-                </div>
-
-                {/* SECCIÓN 3: OFERTAS (Listado Refinado) */}
-                <div className="space-y-4 pt-4 border-t border-slate-100">
-                    <label className="text-[10px] font-black uppercase tracking-widest text-slate-500 block text-center">03. Ofertas Disponibles</label>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-h-48 overflow-y-auto pr-2 custom-scrollbar">
-                        {ofertasFiltradas.map((o, i) => (
-                            <button key={i} onClick={() => setOfertaSeleccionada(o)}
-                                    className={`flex justify-between items-center p-3 rounded-xl border-2 transition-all ${
-                                        ofertaSeleccionada?.nombre === o.nombre
-                                            ? 'border-[#002A8F] bg-blue-50/50'
-                                            : 'border-slate-50 bg-white hover:border-slate-200'
+            <div className="p-6 md:p-8 space-y-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {/* Botones de Categoría */}
+                    <div className="space-y-2">
+                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Servicio</p>
+                        {['Recarga a Cuba (ETECSA)', 'Combo de Comida/Aseo', 'Envío de Dinero'].map(s => (
+                            <button key={s} onClick={() => setServicio(s)}
+                                    className={`w-full text-left px-4 py-2.5 rounded-xl text-[10px] font-black transition-all border ${
+                                        servicio === s ? 'bg-[#002A8F] text-white border-[#002A8F] shadow-lg' : 'bg-slate-50 text-slate-400 border-slate-100'
                                     }`}>
-                                <div className="text-left">
-                                    <p className="text-[10px] font-black text-slate-800 uppercase leading-none">{o.nombre}</p>
-                                    <p className="text-[8px] text-slate-400 font-bold mt-1 uppercase">{o.descripcion?.substring(0, 20)}...</p>
-                                </div>
-                                <span className="text-xs font-black text-[#002A8F] italic">{calcularPrecio(o.precio)}</span>
+                                {s.toUpperCase()}
+                            </button>
+                        ))}
+                    </div>
+
+                    {/* Botones de Moneda */}
+                    <div className="space-y-2">
+                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Pago desde</p>
+                        {['Brasil (PIX)', 'Europa (Euros)'].map(m => (
+                            <button key={m} onClick={() => setPago(m)}
+                                    className={`w-full text-left px-4 py-2.5 rounded-xl text-[10px] font-black transition-all border ${
+                                        pago === m ? 'bg-slate-900 text-white border-slate-900 ring-2 ring-[#FEDD00]/30' : 'bg-slate-50 text-slate-400 border-slate-100'
+                                    }`}>
+                                {m.toUpperCase()}
                             </button>
                         ))}
                     </div>
                 </div>
 
-                {/* SECCIÓN 4: NÚMERO */}
-                <div className="pt-4 border-t border-slate-100">
-                    <div className="max-w-xs mx-auto relative group">
-                        <span className="absolute left-4 top-1/2 -translate-y-1/2 text-[10px] font-black text-slate-400 tracking-tighter border-r border-slate-200 pr-3">+53 CUBA</span>
-                        <input
-                            type="number"
-                            placeholder="5XXXXXXX"
-                            value={numero}
-                            onChange={e => setNumero(e.target.value)}
-                            className="w-full bg-slate-50 p-4 pl-24 rounded-2xl font-black text-sm tracking-[0.1em] border-2 border-transparent focus:border-[#002A8F] focus:bg-white outline-none transition-all shadow-inner"
-                        />
-                    </div>
+                {/* Área Dinámica (Calculadora o Lista) */}
+                <div className="bg-slate-50 p-5 rounded-2xl border-2 border-slate-100">
+                    {servicio === 'Envío de Dinero' ? (
+                        <div className="py-2 space-y-4">
+                            <div className="flex flex-col sm:flex-row items-center justify-around gap-4 text-center">
+                                <div>
+                                    <p className="text-[9px] font-bold text-slate-400 uppercase mb-1">Envías (BRL)</p>
+                                    <input
+                                        type="number"
+                                        value={montoRemesa}
+                                        onChange={(e) => setMontoRemesa(Number(e.target.value))}
+                                        className="bg-white border border-slate-200 rounded-lg p-2 w-24 text-center text-xl font-black text-[#002A8F] outline-none focus:ring-2 focus:ring-[#002A8F]/20"
+                                    />
+                                </div>
+                                <div className="hidden sm:block text-[#FEDD00] text-2xl font-black">➜</div>
+                                <div>
+                                    <p className="text-[9px] font-bold text-slate-400 uppercase mb-1">Reciben (CUP)</p>
+                                    <div className="bg-[#009739] text-white px-5 py-2 rounded-lg shadow-md">
+                                        <p className="text-xl font-black italic">
+                                            {(montoRemesa * tasaCup).toLocaleString()}
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                            <p className="text-center text-[8px] font-black text-slate-400 uppercase tracking-tighter">
+                                Cotización: 1 BRL = {tasaCup} Pesos Cubanos
+                            </p>
+                        </div>
+                    ) : (
+                        <div className="grid grid-cols-1 gap-2 max-h-40 overflow-y-auto pr-1">
+                            {ofertasFiltradas.map((o, i) => (
+                                <button key={i} onClick={() => setOfertaSeleccionada(o)}
+                                        className={`flex justify-between items-center p-3 rounded-xl border-2 transition-all ${
+                                            ofertaSeleccionada?.nombre === o.nombre ? 'border-[#002A8F] bg-white' : 'border-transparent opacity-60'
+                                        }`}>
+                                    <span className="text-[10px] font-black uppercase">{o.nombre}</span>
+                                    <span className="text-[11px] font-black text-[#002A8F]">{calcularPrecio(o.precio)}</span>
+                                </button>
+                            ))}
+                        </div>
+                    )}
                 </div>
 
-                {/* BOTÓN FINAL */}
+                {/* Input de Identificación */}
+                <input
+                    type="text"
+                    placeholder="NRO. TELÉFONO O TARJETA BANCARIA"
+                    value={numero}
+                    onChange={e => setNumero(e.target.value)}
+                    className="w-full bg-slate-50 border-2 border-slate-100 p-4 rounded-xl font-black text-xs text-center focus:bg-white focus:border-[#002A8F] outline-none transition-all uppercase"
+                />
+
+                {/* Botón de Acción */}
                 <button onClick={enviarPedido}
-                        className="w-full bg-[#002A8F] hover:bg-[#CF142B] text-white font-black py-5 rounded-[20px] text-[11px] uppercase tracking-[0.4em] shadow-xl transition-all active:scale-95 group relative overflow-hidden">
-                    <span className="relative z-10">Confirmar Transacción ⚡</span>
-                    <div className="absolute inset-0 bg-white/10 translate-y-full group-hover:translate-y-0 transition-transform"></div>
+                        className="w-full bg-[#002A8F] hover:bg-[#CF142B] text-white font-black py-4 rounded-2xl text-[11px] uppercase tracking-[0.4em] shadow-lg transition-all active:scale-95">
+                    Procesar con Nexus 🚀
                 </button>
             </div>
         </div>
