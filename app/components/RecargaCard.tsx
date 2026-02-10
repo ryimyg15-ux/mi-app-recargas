@@ -18,12 +18,12 @@ export default function RecargaCard() {
     const [pago, setPago] = useState('Brasil (PIX)');
     const [ofertaSeleccionada, setOfertaSeleccionada] = useState<Oferta | null>(null);
     const [numero, setNumero] = useState('');
-    const [montoRemesa, setMontoRemesa] = useState<number>(100);
+    const [montoOperacion, setMontoOperacion] = useState<number>(100);
     const [tasaCup, setTasaCup] = useState<number>(0);
     const [error, setError] = useState('');
     const [cargando, setCargando] = useState(true);
 
-    // 2. CONFIGURACIÓN DEL MENÚ (Debe coincidir con la Columna E de tu Excel)
+    // 2. CONFIGURACIÓN DEL MENÚ
     const menuCategorias = [
         { id: 'RECARGAS', icon: '📱', servicios: ['Recarga (ETECSA)', 'Recarga (NAUTA)'] },
         { id: 'TIENDA', icon: '🛒', servicios: ['Combo de Comida/Aseo', 'Electrodomésticos'] },
@@ -33,7 +33,7 @@ export default function RecargaCard() {
     const normalizar = (texto: string) =>
         texto ? texto.trim().toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "") : "";
 
-    // 3. CARGA DE DATOS DESDE GOOGLE SHEETS
+    // 3. CARGA DE DATOS
     useEffect(() => {
         const SHEET_ID = '1x4ClX7vmGGsfn2U7YmcS7Uq5VQm88-haaOvBDGsvvQs';
         const URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&gid=0`;
@@ -45,7 +45,6 @@ export default function RecargaCard() {
                 const data: Oferta[] = res.data.filter((o: any) => o.nombre);
                 setTodasLasOfertas(data);
 
-                // BUSCAR TASA: En tu Excel es la fila "Transferencia a Cuba"
                 const filaTasa = data.find((o: any) =>
                     normalizar(o.nombre).includes('transferencia a cuba')
                 );
@@ -60,7 +59,7 @@ export default function RecargaCard() {
         });
     }, []);
 
-    // 4. FILTRADO LÓGICO
+    // 4. FILTRADO
     const ofertasFiltradas = useMemo(() => {
         const servicioNormalizado = normalizar(servicio);
         return todasLasOfertas.filter((o) => {
@@ -75,7 +74,7 @@ export default function RecargaCard() {
         setError('');
     }, [ofertasFiltradas]);
 
-    // 5. VALIDACIÓN DE DATOS (CUBA)
+    // 5. VALIDACIÓN
     const validarDato = (valor: string) => {
         const soloNumeros = valor.replace(/\D/g, '');
         setNumero(soloNumeros);
@@ -93,11 +92,11 @@ export default function RecargaCard() {
         if (!numero || error) return alert("Verifica el número o tarjeta.");
 
         let detalle = categoriaActiva === 'DINERO'
-            ? `💸 *REMESA*\n💰 *Envía:* ${montoRemesa} BRL\n🇨🇺 *Recibe:* ${(montoRemesa * tasaCup).toLocaleString()} CUP\n📈 *Tasa:* 1:${tasaCup}`
+            ? `💸 *OPERACIÓN DE ENVÍO*\n💰 *Envía:* ${montoOperacion} BRL\n🇨🇺 *Recibe:* ${(montoOperacion * tasaCup).toLocaleString()} CUP\n📈 *Tasa:* 1:${tasaCup}`
             : `🛒 *PRODUCTO:* ${ofertaSeleccionada?.nombre}\n💵 *Precio:* ${ofertaSeleccionada?.precio}`;
 
         const mensaje = `*NEXUS R&DAY*\n\n` +
-            `👤 *Servicio:* ${servicio}\n` +
+            `👤 *Operación:* ${servicio}\n` +
             `💳 *Pago:* ${pago}\n` +
             `📍 *ID/Número:* ${numero}\n\n` +
             `${detalle}`;
@@ -156,14 +155,14 @@ export default function RecargaCard() {
                                 <div className="flex items-center justify-between gap-4">
                                     <div className="text-center flex-1">
                                         <p className="text-[7px] font-bold uppercase opacity-70 mb-1">Envías (BRL)</p>
-                                        <input type="number" value={montoRemesa} onChange={e => setMontoRemesa(Number(e.target.value))}
+                                        <input type="number" value={montoOperacion} onChange={e => setMontoOperacion(Number(e.target.value))}
                                                className="w-full bg-white/10 border border-white/20 rounded-xl p-2 text-center font-black text-lg outline-none" />
                                     </div>
                                     <span className="text-xl mt-4 opacity-50">➜</span>
                                     <div className="text-center flex-1">
                                         <p className="text-[7px] font-bold uppercase opacity-70 mb-1">Reciben (CUP)</p>
                                         <div className="bg-white text-blue-700 p-2 rounded-xl font-black text-lg shadow-inner">
-                                            {Math.round(montoRemesa * tasaCup).toLocaleString()}
+                                            {Math.round(montoOperacion * tasaCup).toLocaleString()}
                                         </div>
                                     </div>
                                 </div>
@@ -187,7 +186,7 @@ export default function RecargaCard() {
                                         <span className="text-[10px] font-black text-blue-600 ml-2 whitespace-nowrap">{o.precio}</span>
                                     </button>
                                 )) : (
-                                    <p className="text-center text-[10px] text-slate-400 py-10">No hay productos disponibles en esta sección.</p>
+                                    <p className="text-center text-[10px] text-slate-400 py-10">No hay productos disponibles.</p>
                                 )}
                             </div>
                         )}
@@ -209,7 +208,7 @@ export default function RecargaCard() {
                                 className={`w-full py-5 rounded-2xl font-black text-xs uppercase tracking-widest shadow-xl transition-all active:scale-95 ${
                                     error || !numero ? 'bg-slate-200 text-slate-400 cursor-not-allowed' : 'bg-slate-900 text-white hover:bg-blue-700'
                                 }`}>
-                            {error ? 'Dato Incorrecto' : 'Confirmar Pedido 🚀'}
+                            {error ? 'Dato Incorrecto' : 'Confirmar Operación 🚀'}
                         </button>
                     </div>
                 </div>
