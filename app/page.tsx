@@ -2,24 +2,33 @@ import RecargaCard from './components/RecargaCard';
 
 export default function Home() {
   return (
-      <main className="min-h-screen bg-slate-50 py-16 px-4">
-        <div className="max-w-4xl mx-auto">
-          <header className="text-center mb-12">
-            <h1 className="text-4xl font-extrabold text-slate-900 tracking-tight">
-              Nexus R&DAY <span className="text-blue-600">Servicios Inteligentes</span>
+      <main className="min-h-screen bg-white">
+        {/* Hero Section con Gradiente */}
+        <header className="bg-gradient-to-br from-indigo-600 via-blue-700 to-purple-800 py-20 px-4 shadow-2xl rounded-b-[50px]">
+          <div className="max-w-4xl mx-auto text-center">
+            <div className="inline-block bg-white/20 backdrop-blur-md px-4 py-1 rounded-full text-white text-sm font-medium mb-4">
+              🚀 Recargas Instantáneas a Cuba
+            </div>
+            <h1 className="text-5xl font-black text-white tracking-tight mb-4">
+              TU <span className="text-yellow-400">NEGOCIO</span> NAME
             </h1>
-            <p className="text-slate-600 mt-2 text-lg">
-              Recargas rápidas a Cuba desde cualquier parte del mundo.
+            <p className="text-blue-100 text-xl font-light max-w-xl mx-auto">
+              La forma más rápida y segura de enviar saldo a los tuyos.
+              Sin registros complicados.
             </p>
-          </header>
-
-          {/* Llamamos a nuestro componente */}
-          <RecargaCard />
-
-          <div className="mt-12 p-4 bg-blue-100 rounded-lg text-blue-800 text-center text-sm">
-            💡 Selecciona una oferta y serás redirigido para completar el pago.
           </div>
-        </div>
+        </header>
+
+        {/* Sección de Tarjetas */}
+        <section className="max-w-6xl mx-auto px-4 -mt-10 mb-20">
+          <RecargaCard />
+        </section>
+
+        {/* Footer / Info adicional */}
+        <footer className="bg-slate-50 border-t py-12 text-center text-slate-400 text-sm">
+          <p>© 2026 Tu Negocio Name - Todos los derechos reservados</p>
+          <p className="mt-2 font-medium text-slate-600">Soporte 24/7 vía WhatsApp</p>
+        </footer>
       </main>
   );
 }

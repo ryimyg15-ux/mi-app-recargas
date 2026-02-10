@@ -1,6 +1,8 @@
 'use client';
 import { useState, useEffect } from 'react';
+// @ts-ignore
 import Papa from 'papaparse';
+
 
 interface Oferta {
     nombre: string;
@@ -56,6 +58,12 @@ export default function RecargaCard() {
                         className="w-full bg-green-500 text-white font-bold py-3 rounded-xl"
                     >
                         Pedir por WhatsApp
+                    </button>
+                    <button
+                        onClick={(e) => { e.stopPropagation(); enviarWhatsApp(item.nombre); }}
+                        className="w-full bg-indigo-600 hover:bg-indigo-700 hover:scale-[1.02] active:scale-95 text-white font-bold py-4 rounded-2xl shadow-lg transition-all duration-200"
+                    >
+                        Solicitar Recarga
                     </button>
                 </div>
             ))}
