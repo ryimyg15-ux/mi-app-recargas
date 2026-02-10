@@ -82,6 +82,54 @@ export default function Home() {
                 </div>
             </header>
 
+            {/* Sección: ¿Cómo funciona? */}
+            <section className="relative z-10 max-w-6xl mx-auto px-4 mt-12 mb-12">
+                <div className="bg-white/40 backdrop-blur-md border border-white/20 rounded-[40px] p-8 md:p-12 shadow-xl">
+                    <div className="text-center mb-10">
+                        <h3 className="text-sm font-black text-blue-600 uppercase tracking-[0.3em] mb-2">Proceso Nexus</h3>
+                        <h2 className="text-3xl font-black text-slate-800 italic">¿Cómo funciona?</h2>
+                    </div>
+
+                    <div className="grid md:grid-cols-3 gap-8">
+                        {/* Paso 1 */}
+                        <div className="relative group text-center p-6 bg-white/50 rounded-3xl border border-white/50 hover:shadow-lg transition-all">
+                            <div className="w-14 h-14 bg-blue-600 text-white rounded-2xl flex items-center justify-center mx-auto mb-4 text-2xl shadow-blue-200 shadow-lg group-hover:scale-110 transition-transform">
+                                ⚡
+                            </div>
+                            <h4 className="font-black text-slate-800 mb-2 uppercase text-xs tracking-wider">Velocidad</h4>
+                            <p className="text-slate-500 text-sm leading-relaxed font-medium">
+                                Las recargas se procesan <br />
+                                <span className="text-blue-600 font-bold italic">en minutos</span>
+                            </p>
+                        </div>
+
+                        {/* Paso 2 */}
+                        <div className="relative group text-center p-6 bg-white/50 rounded-3xl border border-white/50 hover:shadow-lg transition-all">
+                            <div className="w-14 h-14 bg-[#009739] text-white rounded-2xl flex items-center justify-center mx-auto mb-4 text-2xl shadow-green-200 shadow-lg group-hover:scale-110 transition-transform">
+                                💳
+                            </div>
+                            <h4 className="font-black text-slate-800 mb-2 uppercase text-xs tracking-wider">Métodos</h4>
+                            <p className="text-slate-500 text-sm leading-relaxed font-medium">
+                                Pago por <span className="text-green-700 font-bold uppercase">PIX</span> (Brasil) <br />
+                                o <span className="text-blue-800 font-bold uppercase">SEPA/IBAN</span> (Europa)
+                            </p>
+                        </div>
+
+                        {/* Paso 3 */}
+                        <div className="relative group text-center p-6 bg-white/50 rounded-3xl border border-white/50 hover:shadow-lg transition-all">
+                            <div className="w-14 h-14 bg-[#FEDD00] text-[#002A8F] rounded-2xl flex items-center justify-center mx-auto mb-4 text-2xl shadow-yellow-100 shadow-lg group-hover:scale-110 transition-transform">
+                                🔄
+                            </div>
+                            <h4 className="font-black text-slate-800 mb-2 uppercase text-xs tracking-wider">Transparencia</h4>
+                            <p className="text-slate-500 text-sm leading-relaxed font-medium">
+                                Tasa de conversión: <br />
+                                <span className="text-slate-800 font-black italic">1 EUR = 5,50 BRL</span>
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
             {/* Cuerpo de la aplicación (El Configurador) */}
             <div className="relative -mt-20 px-4">
                 <RecargaCard />

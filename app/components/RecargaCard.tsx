@@ -15,7 +15,7 @@ export default function RecargaCard() {
     const [todasLasOfertas, setTodasLasOfertas] = useState<Oferta[]>([]);
     const [ofertasFiltradas, setOfertasFiltradas] = useState<Oferta[]>([]);
     const [tasas, setTasas] = useState<Record<string, number>>({});
-    const [isSuccess, setIsSuccess] = useState(false); // <--- Estado para mostrar agradecimiento
+    const [isSuccess, setIsSuccess] = useState(false);
 
     const [servicio, setServicio] = useState('Recarga a Cuba (ETECSA)');
     const [pago, setPago] = useState('Brasil (PIX)');
@@ -26,6 +26,7 @@ export default function RecargaCard() {
         const SHEET_ID = '1x4ClX7vmGGsfn2U7YmcS7Uq5VQm88-haaOvBDGsvvQs';
         const URL_OFERTAS = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&gid=0`;
 
+        // Carga de Ofertas
         Papa.parse(URL_OFERTAS, {
             download: true,
             header: true,
@@ -38,19 +39,37 @@ export default function RecargaCard() {
             }
         });
 
+        // Configuración de Tasas Unificada
         setTasas({
             'Brasil (PIX)': 1.0,
-            'EE.UU (Zelle)': 0.18,
-            'Europa (Euros)': 0.16
+            'EE.UU (Zelle)': 0.172, // Basado en 1 USD = 5.80 BRL aprox.
+            'Europa (Euros)': 0.181  // Este se sobreescribe por la división exacta en calcularPrecio
         });
     }, []);
 
+    // Función calcularPrecio ÚNICA y CORREGIDA
     const calcularPrecio = (precioBase: string) => {
+        if (!precioBase) return "0.00";
+
+        // Limpieza de formato (maneja "20,00" o "R$ 20")
         const limpio = precioBase.replace(',', '.').replace(/[^0-9.]/g, '');
         const numBase = parseFloat(limpio);
+
         if (isNaN(numBase)) return precioBase;
-        const tasaActual = tasas[pago] || 1.0;
-        const total = (numBase * tasaActual).toFixed(2);
+
+        let totalNum: number;
+
+        // Lógica de conversión según moneda
+        if (pago.includes('Europa')) {
+            totalNum = numBase / 5.50; // Tasa exacta: 1 EUR = 5.50 BRL
+        } else if (pago.includes('EE.UU')) {
+            totalNum = numBase / 5.80; // Tasa exacta: 1 USD = 5.80 BRL
+        } else {
+            totalNum = numBase; // Brasil (PIX) tasa 1:1
+        }
+
+        const total = totalNum.toFixed(2);
+
         if (pago.includes('Brasil')) return `R$ ${total}`;
         if (pago.includes('EE.UU')) return `$ ${total} USD`;
         if (pago.includes('Europa')) return `€ ${total}`;
@@ -72,9 +91,7 @@ export default function RecargaCard() {
 
     const enviarWhatsApp = () => {
         if (!numero || numero.length < 8) { alert("Introduce el número"); return; }
-
-        setIsSuccess(true); // Mostramos pantalla de éxito
-
+        setIsSuccess(true);
         const precioFinal = calcularPrecio(ofertaSeleccionada?.precio || "0");
         const mensajeTexto = `Hola Nexus R&DAY 🚀
 Quiero hacer una recarga móvil.
@@ -87,22 +104,17 @@ Quiero hacer una recarga móvil.
 
 🌐 Vengo desde: nexusR&DAY.com`;
 
-        // Pequeño retraso para que vean la animación de éxito antes de abrir WhatsApp
         setTimeout(() => {
             window.open(`https://wa.me/+5547999222521?text=${encodeURIComponent(mensajeTexto)}`, '_blank');
         }, 2000);
     };
 
-    // --- RENDERIZADO DE PANTALLA DE ÉXITO ---
     if (isSuccess) {
         return (
             <div className="max-w-xl mx-auto bg-white rounded-[40px] shadow-2xl p-12 text-center animate-in fade-in zoom-in duration-500">
-                <div className="w-24 h-24 bg-green-100 text-green-600 rounded-full flex items-center justify-center mx-auto mb-6 text-5xl">
-                    ✓
-                </div>
+                <div className="w-24 h-24 bg-green-100 text-green-600 rounded-full flex items-center justify-center mx-auto mb-6 text-5xl">✓</div>
                 <h2 className="text-3xl font-black text-slate-800 mb-2">¡Pedido Listo!</h2>
-                <p className="text-slate-500 mb-8 font-medium">Redirigiendo a WhatsApp para finalizar el pago de forma segura...</p>
-
+                <p className="text-slate-500 mb-8 font-medium">Redirigiendo a WhatsApp de forma segura...</p>
                 <div className="bg-slate-50 rounded-2xl p-6 text-left mb-8 border border-slate-100">
                     <p className="text-[10px] uppercase font-bold text-slate-400 mb-3 tracking-widest">Resumen del Ticket</p>
                     <div className="space-y-2">
@@ -111,29 +123,15 @@ Quiero hacer una recarga móvil.
                         <div className="flex justify-between text-sm"><span className="text-slate-400">Número:</span> <span className="font-bold text-slate-700">+53 {numero}</span></div>
                     </div>
                 </div>
-
-                <div className="flex items-center justify-center gap-2">
-                    <div className="w-2 h-2 bg-blue-600 rounded-full animate-bounce"></div>
-                    <div className="w-2 h-2 bg-blue-600 rounded-full animate-bounce [animation-delay:-0.15s]"></div>
-                    <div className="w-2 h-2 bg-blue-600 rounded-full animate-bounce [animation-delay:-0.3s]"></div>
-                </div>
-
-                <button
-                    onClick={() => setIsSuccess(false)}
-                    className="mt-8 text-xs font-bold text-slate-400 hover:text-blue-600 transition-colors uppercase"
-                >
-                    ← Volver a editar
-                </button>
+                <button onClick={() => setIsSuccess(false)} className="mt-8 text-xs font-bold text-slate-400 hover:text-blue-600 transition-colors uppercase">← Volver a editar</button>
             </div>
         );
     }
 
-    // --- RENDERIZADO DEL FORMULARIO NORMAL ---
     return (
         <div className="max-w-4xl mx-auto bg-white/80 backdrop-blur-xl rounded-[40px] shadow-2xl border border-white/20 overflow-hidden mb-20">
             <div className="p-8 md:p-12">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
-                    {/* ... (Todo el contenido del formulario que ya teníamos se mantiene igual) ... */}
                     <div className="space-y-8">
                         <div>
                             <label className="text-xs font-black text-blue-900/40 uppercase tracking-[0.2em] mb-4 block">1. Servicios Asociados</label>
@@ -142,9 +140,7 @@ Quiero hacer una recarga móvil.
                                     <button
                                         key={s}
                                         onClick={() => setServicio(s)}
-                                        className={`w-full p-4 rounded-2xl text-left transition-all ${
-                                            servicio === s ? 'bg-blue-600 text-white shadow-xl scale-[1.02]' : 'bg-slate-50 text-slate-600 hover:bg-slate-100'
-                                        } font-bold text-sm`}
+                                        className={`w-full p-4 rounded-2xl text-left transition-all ${servicio === s ? 'bg-blue-600 text-white shadow-xl scale-[1.02]' : 'bg-slate-50 text-slate-600 hover:bg-slate-100'} font-bold text-sm`}
                                     >
                                         {s}
                                     </button>
@@ -172,9 +168,7 @@ Quiero hacer una recarga móvil.
                                 <div
                                     key={index}
                                     onClick={() => setOfertaSeleccionada(item)}
-                                    className={`p-5 rounded-3xl border-2 transition-all cursor-pointer ${
-                                        ofertaSeleccionada?.nombre === item.nombre ? 'border-green-500 bg-green-50/50' : 'border-slate-100 hover:border-slate-200'
-                                    }`}
+                                    className={`p-5 rounded-3xl border-2 transition-all cursor-pointer ${ofertaSeleccionada?.nombre === item.nombre ? 'border-green-500 bg-green-50/50' : 'border-slate-100 hover:border-slate-200'}`}
                                 >
                                     <div className="flex justify-between items-center">
                                         <div>
