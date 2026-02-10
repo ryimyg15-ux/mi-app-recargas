@@ -13,24 +13,31 @@ interface Oferta {
 export default function RecargaCard() {
     const [ofertas, setOfertas] = useState<Oferta[]>([]);
 
-    useEffect(() => {
-        const SHEET_ID = '1x4ClX7vmGGsfn2U7YmcS7Uq5VQm88-haaOvBDGsvvQs';
-        const URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv`;
 
-        Papa.parse(URL, {
-            download: true,
-            header: true,
-            complete: (results) => {
-                setOfertas(results.data as Oferta[]);
-            },
-        });
-    }, []);
+        // Función para el sonido
+        const playSound = () => {
+            const audio = new Audio('https://assets.mixkit.co/active_storage/sfx/2568/2568-preview.mp3');
+            audio.volume = 0.5; // Volumen al 50%
+            audio.play();
+        };
 
-    const enviarWhatsApp = (oferta: string) => {
-        const telefono = "+5547999222521";
-        const mensaje = encodeURIComponent(`Hola, me interesa la oferta: ${oferta}`);
-        window.open(`https://wa.me/${telefono}?text=${mensaje}`, '_blank');
-    };
+        // ... resto del código (useEffect, enviarWhatsApp)
+
+
+
+        const enviarWhatsApp = (oferta: string) => {
+            playSound(); // <--- Aquí suena el click
+
+            const telefono = "+5547999222521";
+            const mensajeTexto = `Hola Nexus R&DAY 🚀...`; // (Tu mensaje anterior)
+
+            const mensajeEncoded = encodeURIComponent(mensajeTexto);
+
+            // Abrimos WhatsApp con un pequeño retraso para que se aprecie la animación
+            setTimeout(() => {
+                window.open(`https://wa.me/${telefono}?text=${mensajeEncoded}`, '_blank');
+            }, 100);
+        };
 
     return (
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-8">
@@ -69,10 +76,11 @@ export default function RecargaCard() {
 
                     <button
                         onClick={(e) => { e.stopPropagation(); enviarWhatsApp(item.nombre); }}
-                        className="w-full bg-[#009739] hover:bg-[#007b2e] text-[#FEDD00] font-black py-4 rounded-xl shadow-md transform transition-all active:scale-95 flex items-center justify-center gap-2 group-hover:scale-[1.02]"
+                        className="w-full bg-[#009739] hover:bg-[#007b2e] text-[#FEDD00] font-black py-4 rounded-xl shadow-md transform transition-all active:scale-90 hover:scale-[1.05] flex items-center justify-center gap-2 group-hover:animate-pulse"
                     >
                         <span className="text-xl">➔</span> SOLICITAR AHORA
                     </button>
+
                 </div>
             ))}
         </div>
