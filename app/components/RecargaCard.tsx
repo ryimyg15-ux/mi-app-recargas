@@ -37,9 +37,21 @@ export default function RecargaCard() {
                 const data = res.data.filter((o: any) => o.nombre);
                 setTodasLasOfertas(data);
 
-                // Tasa dinámica
-                const filaTasa = data.find((o: any) => normalizar(o.nombre).includes('tasa brl a cup'));
-                if (filaTasa) setTasaCup(parseFloat(filaTasa.precio.replace(/[^0-9.]/g, '')));
+                // BUSCAR TASA: En tu Excel se llama "Transferencia a Cuba"
+                const filaTasa = data.find((o: any) =>
+                    normalizar(o.nombre).includes('transferencia a cuba')
+                );
+
+                if (filaTasa) {
+                    // Limpiamos "R$92,00" para obtener solo el número 92
+                    const valorLimpio = filaTasa.precio.replace('R$', '').replace(',', '.').trim();
+                    const tasaNumerica = parseFloat(valorLimpio);
+
+                    if (!isNaN(tasaNumerica)) {
+                        setTasaCup(tasaNumerica);
+                        console.log("Tasa cargada correctamente:", tasaNumerica);
+                    }
+                }
             }
         });
     }, []);
