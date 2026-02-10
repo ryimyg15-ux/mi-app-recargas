@@ -13,31 +13,49 @@ interface Oferta {
 export default function RecargaCard() {
     const [ofertas, setOfertas] = useState<Oferta[]>([]);
 
+    // 1. Cargar datos de Google Sheets
+    useEffect(() => {
+        const SHEET_ID = '1x4ClX7vmGGsfn2U7YmcS7Uq5VQm88-haaOvBDGsvvQs';
+        const URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv`;
 
-        // Función para el sonido
-        const playSound = () => {
-            const audio = new Audio('https://assets.mixkit.co/active_storage/sfx/2568/2568-preview.mp3');
-            audio.volume = 0.5; // Volumen al 50%
-            audio.play();
-        };
+        Papa.parse(URL, {
+            download: true,
+            header: true,
+            complete: (results) => {
+                setOfertas(results.data as Oferta[]);
+            },
+        });
+    }, []);
 
-        // ... resto del código (useEffect, enviarWhatsApp)
+    // 2. Función para el sonido
+    const playSound = () => {
+        const audio = new Audio('https://assets.mixkit.co/active_storage/sfx/2568/2568-preview.mp3');
+        audio.volume = 0.5;
+        audio.play().catch(e => console.log("Audio play blocked")); // Evita error si el navegador bloquea audio
+    };
 
+    // 3. Función de WhatsApp mejorada
+    const enviarWhatsApp = (oferta: string) => {
+        playSound();
 
+        const telefono = "+5547999222521";
+        const mensajeTexto = `Hola Nexus R&DAY 🚀
+Quiero hacer una recarga móvil.
 
-        const enviarWhatsApp = (oferta: string) => {
-            playSound(); // <--- Aquí suena el click
+📱 *Tipo de servicio:* Recarga a Cuba (ETECSA)
+🇧🇷 *Origen del pago:* Brasil (PIX)
+✅ *Recarga seleccionada:* ${oferta}
+💰 *Monto:* A consultar (recarga personalizada)
+☎️ *Número a recargar:* +53 ...
 
-            const telefono = "+5547999222521";
-            const mensajeTexto = `Hola Nexus R&DAY 🚀...`; // (Tu mensaje anterior)
+🌐 Vengo desde: nexusR&DAY.com`;
 
-            const mensajeEncoded = encodeURIComponent(mensajeTexto);
+        const mensajeEncoded = encodeURIComponent(mensajeTexto);
 
-            // Abrimos WhatsApp con un pequeño retraso para que se aprecie la animación
-            setTimeout(() => {
-                window.open(`https://wa.me/${telefono}?text=${mensajeEncoded}`, '_blank');
-            }, 100);
-        };
+        setTimeout(() => {
+            window.open(`https://wa.me/${telefono}?text=${mensajeEncoded}`, '_blank');
+        }, 150);
+    };
 
     return (
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-8">
@@ -46,7 +64,6 @@ export default function RecargaCard() {
                     key={index}
                     className="relative p-6 rounded-3xl border-2 border-transparent bg-white shadow-lg hover:shadow-2xl hover:border-[#009739]/30 transition-all duration-300 group flex flex-col justify-between"
                 >
-                    {/* Etiqueta de Destaque */}
                     {item.popular === 'true' && (
                         <span className="absolute -top-3 right-6 bg-[#FEDD00] text-[#009739] text-[10px] px-3 py-1 rounded-full font-black uppercase shadow-md border border-[#009739] z-10">
                             ⭐ Destaque
@@ -61,7 +78,6 @@ export default function RecargaCard() {
                             {item.desc}
                         </p>
 
-                        {/* Sección de Precio con Banderas */}
                         <div className="flex items-center justify-between mb-6 bg-slate-50 p-3 rounded-xl border border-dashed border-gray-300">
                             <div className="flex flex-col">
                                 <span className="text-[10px] uppercase text-gray-400 font-bold">Precio</span>
@@ -76,11 +92,10 @@ export default function RecargaCard() {
 
                     <button
                         onClick={(e) => { e.stopPropagation(); enviarWhatsApp(item.nombre); }}
-                        className="w-full bg-[#009739] hover:bg-[#007b2e] text-[#FEDD00] font-black py-4 rounded-xl shadow-md transform transition-all active:scale-90 hover:scale-[1.05] flex items-center justify-center gap-2 group-hover:animate-pulse"
+                        className="w-full bg-[#009739] hover:bg-[#007b2e] text-[#FEDD00] font-black py-4 rounded-xl shadow-md transform transition-all active:scale-90 hover:scale-[1.05] flex items-center justify-center gap-2"
                     >
                         <span className="text-xl">➔</span> SOLICITAR AHORA
                     </button>
-
                 </div>
             ))}
         </div>
