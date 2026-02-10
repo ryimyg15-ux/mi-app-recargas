@@ -11,7 +11,7 @@ interface Oferta {
 
 export default function RecargaCard() {
     const [todasLasOfertas, setTodasLasOfertas] = useState<Oferta[]>([]);
-    const [servicio, setServicio] = useState('Recarga a Cuba (ETECSA)');
+    const [servicio, setServicio] = useState('Recarga (ETECSA)');
     const [pago, setPago] = useState('Brasil (PIX)');
     const [ofertaSeleccionada, setOfertaSeleccionada] = useState<Oferta | null>(null);
     const [numero, setNumero] = useState('');
@@ -21,7 +21,7 @@ export default function RecargaCard() {
     const normalizar = (texto: string) =>
         texto ? texto.trim().toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "") : "";
 
-    // 1. Carga inicial única
+    // 1. Carga inicial de datos
     useEffect(() => {
         const SHEET_ID = '1x4ClX7vmGGsfn2U7YmcS7Uq5VQm88-haaOvBDGsvvQs';
         const URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&gid=0`;
@@ -42,12 +42,25 @@ export default function RecargaCard() {
         });
     }, []);
 
-    // 2. Filtrado lógico (sin volver a descargar)
+    // 2. Filtrado lógico (Corregido: Fuera del JSX)
     const ofertasFiltradas = useMemo(() => {
-        const filtradas = todasLasOfertas.filter((o) => normalizar(o.categoria) === normalizar(servicio));
-        if (filtradas.length > 0) setOfertaSeleccionada(filtradas[0]);
-        return filtradas;
+        if (todasLasOfertas.length === 0) return [];
+        const servicioNormalizado = normalizar(servicio);
+
+        return todasLasOfertas.filter((o) => {
+            const catExcel = normalizar(o.categoria);
+            return catExcel && (servicioNormalizado.includes(catExcel) || catExcel.includes(servicioNormalizado));
+        });
     }, [servicio, todasLasOfertas]);
+
+    // 3. Sincronizar selección automática cuando cambian las ofertas filtradas
+    useEffect(() => {
+        if (ofertasFiltradas.length > 0) {
+            setOfertaSeleccionada(ofertasFiltradas[0]);
+        } else {
+            setOfertaSeleccionada(null);
+        }
+    }, [ofertasFiltradas]);
 
     const calcularPrecio = (precioBase: string) => {
         if (!precioBase) return "0.00";
@@ -55,7 +68,6 @@ export default function RecargaCard() {
         if (isNaN(numBase)) return precioBase;
 
         let total = numBase;
-        // Ajuste de tasas de cambio simuladas
         if (pago.includes('Europa')) total = numBase / 5.50;
         else if (pago.includes('EE.UU')) total = numBase / 5.80;
 
@@ -82,14 +94,12 @@ export default function RecargaCard() {
 
     return (
         <div className="bg-white text-slate-900 rounded-3xl overflow-hidden shadow-2xl border border-slate-100 max-w-xl mx-auto font-sans">
-            {/* Header */}
             <div className="bg-slate-900 py-3 text-center">
                 <span className="text-[10px] font-black text-white/40 uppercase tracking-[0.4em]">Nexus System v2.0</span>
             </div>
 
             <div className="p-6 space-y-6">
                 <div className="grid grid-cols-2 gap-4">
-                    {/* COLUMNA 1: SERVICIOS */}
                     <div className="space-y-2">
                         <label className="text-[9px] font-black text-slate-400 uppercase">1. Operación</label>
                         {['Recarga (ETECSA)', 'Recarga (NAUTA)','Combo de Comida/Aseo', 'Envío de Dinero'].map(s => (
@@ -102,7 +112,6 @@ export default function RecargaCard() {
                         ))}
                     </div>
 
-                    {/* COLUMNA 2: PAGOS */}
                     <div className="space-y-2">
                         <label className="text-[9px] font-black text-slate-400 uppercase">2. Pago Desde</label>
                         {['Brasil (PIX)', 'EE.UU (Zelle)', 'Europa (Euros)'].map(m => (
@@ -116,7 +125,6 @@ export default function RecargaCard() {
                     </div>
                 </div>
 
-                {/* CONTENIDO DINÁMICO */}
                 <div className="bg-slate-50 p-4 rounded-xl border border-slate-200">
                     {normalizar(servicio).includes('dinero') ? (
                         <div className="space-y-4 py-2">
@@ -142,16 +150,20 @@ export default function RecargaCard() {
                         </div>
                     ) : (
                         <div className="space-y-2 max-h-48 overflow-y-auto pr-1">
-                            {ofertasFiltradas.length > 0 ? ofertasFiltradas.map((o, i) => (
-                                <button key={i} onClick={() => setOfertaSeleccionada(o)}
-                                        className={`w-full flex justify-between items-center p-3 rounded-xl border-2 transition-all ${
-                                            ofertaSeleccionada?.nombre === o.nombre ? 'border-[#002A8F] bg-white shadow-md scale-[1.02]' : 'border-transparent opacity-60 hover:opacity-100'
+                            {ofertasFiltradas.map((o, idx) => (
+                                <button key={idx}
+                                        onClick={() => setOfertaSeleccionada(o)}
+                                        className={`w-full flex justify-between items-center p-3 rounded-xl border transition-all ${
+                                            ofertaSeleccionada?.nombre === o.nombre
+                                                ? 'bg-white border-[#002A8F] shadow-sm ring-1 ring-[#002A8F]'
+                                                : 'bg-white/50 border-transparent hover:border-slate-300'
                                         }`}>
-                                    <span className="text-[9px] font-black uppercase">{o.nombre}</span>
+                                    <span className="text-[10px] font-bold text-slate-700">{o.nombre}</span>
                                     <span className="text-[10px] font-black text-[#002A8F]">{calcularPrecio(o.precio)}</span>
                                 </button>
-                            )) : (
-                                <p className="text-center text-[9px] text-slate-400 py-4">No hay ofertas disponibles en esta categoría</p>
+                            ))}
+                            {ofertasFiltradas.length === 0 && (
+                                <p className="text-center text-[10px] text-slate-400 py-4">No hay productos disponibles para esta categoría.</p>
                             )}
                         </div>
                     )}
