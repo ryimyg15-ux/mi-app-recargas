@@ -1,23 +1,31 @@
 'use client';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import Papa from 'papaparse';
 
-// 1. Definimos la "forma" de nuestra oferta
 interface Oferta {
-    id: number;
     nombre: string;
     precio: string;
     desc: string;
-    popular?: boolean; // El signo '?' indica que es opcional
+    popular: string; // Google Sheets lo envía como texto
 }
 
-const ofertas: Oferta[] = [
-    { id: 1, nombre: 'ETECSA 2GB', precio: '€3,64', desc: '2GB + 300MB nacional' },
-    { id: 2, nombre: 'ETECSA 7GB', precio: '€16,36', desc: '7GB + 300MB nacional', popular: true },
-    { id: 3, nombre: 'Saldo Móvil', precio: '€5,45', desc: '360 CUP de saldo' },
-];
-
 export default function RecargaCard() {
-    const [seleccionada, setSeleccionada] = useState<number | null>(null);
+    const [ofertas, setOfertas] = useState<Oferta[]>([]);
+    const [seleccionada, setSeleccionada] = useState<string | null>(null);
+
+    useEffect(() => {
+        // Sustituye con el ID de tu hoja de Google Sheets
+        const SHEET_ID = '1x4ClX7vmGGsfn2U7YmcS7Uq5VQm88-haaOvBDGsvvQs';
+        const URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv`;
+
+        Papa.parse(URL, {
+            download: true,
+            header: true,
+            complete: (results) => {
+                setOfertas(results.data as Oferta[]);
+            },
+        });
+    }, []);
 
     const enviarWhatsApp = (oferta: string) => {
         const telefono = "+5547999222521";
@@ -27,25 +35,22 @@ export default function RecargaCard() {
 
     return (
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-8">
-            {ofertas.map((item) => (
+            {ofertas.map((item, index) => (
                 <div
-                    key={item.id}
-                    onClick={() => setSeleccionada(item.id)}
+                    key={index}
+                    onClick={() => setSeleccionada(item.nombre)}
                     className={`relative p-6 rounded-2xl border-2 cursor-pointer transition-all ${
-                        seleccionada === item.id ? 'border-blue-500 bg-blue-50' : 'border-gray-200 bg-white'
+                        seleccionada === item.nombre ? 'border-blue-500 bg-blue-50' : 'border-gray-200 bg-white'
                     }`}
                 >
-                    {/* Aquí IntelliJ ya no marcará error porque definimos 'popular' arriba */}
-                    {item.popular && (
+                    {item.popular === 'true' && (
                         <span className="absolute -top-3 left-1/2 -translate-x-1/2 bg-orange-500 text-white text-[10px] px-3 py-1 rounded-full font-bold uppercase">
               Más vendido
             </span>
                     )}
-
                     <h3 className="text-xl font-bold">{item.nombre}</h3>
                     <p className="text-gray-500 text-sm mb-4">{item.desc}</p>
                     <p className="text-3xl font-black text-blue-600 mb-6">{item.precio}</p>
-
                     <button
                         onClick={(e) => { e.stopPropagation(); enviarWhatsApp(item.nombre); }}
                         className="w-full bg-green-500 text-white font-bold py-3 rounded-xl"
