@@ -1,203 +1,197 @@
 'use client';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 // @ts-ignore
 import Papa from 'papaparse';
 
-export default function NexusCyberSecurity() {
-    const [todasLasOfertas, setTodasLasOfertas] = useState<any[]>([]);
-    const [categoriaActiva, setCategoriaActiva] = useState('RECARGAS');
+export default function NexusTradingDashboard() {
+    // ESTADOS DE DATOS
+    const [data, setData] = useState<any[]>([]);
     const [tasas, setTasas] = useState({ r1: 92, r2: 96, r3: 97, r4: 98 });
+    const [history, setHistory] = useState<any[]>([]);
+
+    // ESTADOS DE OPERACIÓN
     const [monto, setMonto] = useState<number>(100);
-    const [numero, setNumero] = useState('');
-    const [escaneando, setEscaneando] = useState(false);
-    const [mostrarTicket, setMostrarTicket] = useState(false);
+    const [beneficiario, setBeneficiario] = useState('');
+    const [isProcessing, setIsProcessing] = useState(false);
 
-    // --- SINTETIZADOR DE AUDIO ---
-    const playSound = (freq = 800, type: 'sine' | 'square' = 'sine') => {
-        try {
-            const ctx = new (window.AudioContext || (window as any).webkitAudioContext)();
-            const osc = ctx.createOscillator();
-            const g = ctx.createGain();
-            osc.type = type;
-            osc.frequency.setValueAtTime(freq, ctx.currentTime);
-            g.gain.setValueAtTime(0.05, ctx.currentTime);
-            g.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.1);
-            osc.connect(g);
-            g.connect(ctx.destination);
-            osc.start();
-            osc.stop(ctx.currentTime + 0.1);
-        } catch (e) { console.log("Audio not supported"); }
-    };
-
-    // --- FIX DEFINITIVO DE PRECIO (96,00 -> 96) ---
-    const parseCurrency = (val: any): number => {
-        if (!val) return 0;
-        let s = val.toString().replace('R$', '').replace(/\s/g, '');
-
-        // Si el número viene como "1.200,00", eliminamos el punto de miles y cambiamos la coma por punto
-        if (s.includes(',') && s.includes('.')) {
-            s = s.replace(/\./g, '').replace(',', '.');
-        } else {
-            // Si solo trae coma (ej: 96,00), la cambiamos por punto
-            s = s.replace(',', '.');
-        }
-
-        const num = parseFloat(s);
-        return isNaN(num) ? 0 : num;
-    };
-
-    const esNumeroValido = numero.length >= 8;
-    const tasaActual = monto >= 1000 ? tasas.r4 : monto >= 500 ? tasas.r3 : monto >= 100 ? tasas.r2 : tasas.r1;
-
+    // FETCH DE DATOS (NEXUS ENGINE v2)
     useEffect(() => {
         const SHEET_ID = '1x4ClX7vmGGsfn2U7YmcS7Uq5VQm88-haaOvBDGsvvQs';
         const URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&gid=0`;
+
         Papa.parse(URL, {
             download: true,
             header: true,
             complete: (res: any) => {
-                const data = res.data.filter((o: any) => o.nombre);
-                setTodasLasOfertas(data);
+                const filtered = res.data.filter((o: any) => o.nombre);
+                setData(filtered);
 
-                const getTasa = (n: string, d: number) => {
-                    const f = data.find((o: any) =>
-                        o.nombre?.toLowerCase().trim().includes(n.toLowerCase().trim())
-                    );
-                    return f ? parseCurrency(f.precio) : d;
+                // Parser avanzado de tasas
+                const findTasa = (name: string, fallback: number) => {
+                    const row = filtered.find((o: any) => o.nombre?.toLowerCase().includes(name.toLowerCase()));
+                    if (!row) return fallback;
+                    const val = row.precio.toString().replace('R$', '').replace(/\./g, '').replace(',', '.');
+                    return parseFloat(val) || fallback;
                 };
 
                 setTasas({
-                    r1: getTasa('Tasa Rango 1', 92),
-                    r2: getTasa('Tasa Rango 2', 96),
-                    r3: getTasa('Tasa Rango 3', 97),
-                    r4: getTasa('Tasa Rango 4', 98)
+                    r1: findTasa('Tasa Rango 1', 92),
+                    r2: findTasa('Tasa Rango 2', 96),
+                    r3: findTasa('Tasa Rango 3', 97),
+                    r4: findTasa('Tasa Rango 4', 98)
                 });
             }
         });
     }, []);
 
-    useEffect(() => {
-        if (numero.length === 10 && !escaneando) {
-            setEscaneando(true);
-            playSound(440, 'square');
-            setTimeout(() => {
-                setEscaneando(false);
-                playSound(1000, 'sine');
-            }, 2500);
-        }
-    }, [numero, escaneando]);
+    // CÁLCULOS DINÁMICOS
+    const tasaActual = useMemo(() => {
+        if (monto >= 1000) return tasas.r4;
+        if (monto >= 500) return tasas.r3;
+        if (monto >= 100) return tasas.r2;
+        return tasas.r1;
+    }, [monto, tasas]);
+
+    const totalCUP = monto * tasaActual;
+
+    // MANEJO DE ÓRDENES
+    const ejecutarOrden = () => {
+        if (!beneficiario) return alert("Ingrese un beneficiario");
+        setIsProcessing(true);
+
+        setTimeout(() => {
+            const nuevaOrden = {
+                id: Math.random().toString(36).substr(2, 9).toUpperCase(),
+                time: new Date().toLocaleTimeString(),
+                montoBRL: monto,
+                tasa: tasaActual,
+                totalCUP: totalCUP,
+                target: beneficiario
+            };
+            setHistory([nuevaOrden, ...history]);
+            setIsProcessing(false);
+            setBeneficiario('');
+        }, 1500);
+    };
 
     return (
-        <main className="min-h-screen bg-[#020408] text-white font-sans overflow-x-hidden relative selection:bg-blue-500/50">
-            <div className="absolute inset-0 opacity-10 pointer-events-none bg-[radial-gradient(#1e293b_1px,transparent_1px)] bg-[size:40px_40px]"></div>
+        <main className="min-h-screen bg-[#05070a] text-slate-300 p-4 md:p-8 font-mono">
 
-            <div className="relative z-10 max-w-5xl mx-auto px-6 py-12">
-                <header className="flex justify-between items-center mb-16">
-                    <div className="flex items-center gap-3 group cursor-pointer">
-                        <div className="w-10 h-10 border-2 border-blue-500 rounded-xl flex items-center justify-center font-black italic group-hover:bg-blue-500 transition-all group-hover:text-black">N</div>
-                        <span className="text-[10px] font-black uppercase tracking-[0.4em]">Nexus <span className="text-blue-500">Security</span></span>
+            {/* TOP BAR / TICKER */}
+            <div className="flex flex-wrap gap-4 mb-8">
+                {Object.entries(tasas).map(([key, val], i) => (
+                    <div key={key} className="bg-[#0a0f1a] border border-blue-500/20 p-3 rounded-lg flex-1 min-w-[120px]">
+                        <p className="text-[10px] text-blue-400 font-bold uppercase tracking-tighter">Tier {i+1} Rate</p>
+                        <p className="text-xl font-black text-white">1:{val.toFixed(2).replace('.', ',')}</p>
                     </div>
-                </header>
-
-                <div className="grid lg:grid-cols-12 gap-12 items-start">
-                    <div className="lg:col-span-5 space-y-8">
-                        <h2 className="text-7xl font-black leading-[0.8] tracking-tighter italic uppercase">
-                            Digital <br /> <span className="text-blue-600">Assets</span>
-                        </h2>
-                    </div>
-
-                    <div className="lg:col-span-7 relative group">
-                        <div className={`absolute -inset-1 rounded-[3rem] blur-2xl transition-all duration-1000 ${escaneando ? 'bg-red-500/20' : 'bg-blue-500/10'}`}></div>
-
-                        <div className="relative bg-[#0a0c14]/90 border border-white/10 rounded-[3rem] p-8 md:p-10 backdrop-blur-3xl overflow-hidden">
-                            {escaneando && (
-                                <div className="absolute inset-0 z-50 pointer-events-none">
-                                    <div className="w-full h-1 bg-blue-400 shadow-[0_0_25px_#3b82f6] animate-[scan_2.5s_ease-in-out_infinite] absolute"></div>
-                                </div>
-                            )}
-
-                            <div className="flex gap-2 mb-10">
-                                {['RECARGAS', 'TIENDA', 'DINERO'].map(cat => (
-                                    <button key={cat} onClick={() => { playSound(); setCategoriaActiva(cat); }}
-                                            className={`flex-1 py-3 rounded-xl text-[9px] font-black tracking-widest transition-all ${categoriaActiva === cat ? 'bg-blue-600 text-white shadow-lg shadow-blue-500/20' : 'bg-white/5 text-slate-500'}`}>
-                                        {cat}
-                                    </button>
-                                ))}
-                            </div>
-
-                            <div className="min-h-[280px]">
-                                {categoriaActiva === 'DINERO' ? (
-                                    <div className="space-y-6">
-                                        <div className="bg-white/[0.03] p-8 rounded-[2rem] border border-white/5">
-                                            <p className="text-[8px] font-black text-blue-400 uppercase tracking-widest mb-4">Monto Envío (BRL)</p>
-                                            <input type="number" value={monto} onChange={e => setMonto(Number(e.target.value))} className="bg-transparent text-5xl font-black w-full outline-none text-white tracking-tighter" />
-                                        </div>
-
-                                        <div className="bg-gradient-to-br from-blue-600 to-blue-900 p-8 rounded-[2rem] shadow-2xl relative">
-                                            <p className="text-[8px] font-black uppercase text-white/40 mb-2">Crédito en Cuba (CUP)</p>
-                                            <p className="text-4xl font-black">
-                                                {(monto * tasaActual).toLocaleString('es-CU' as Intl.LocalesArgument, {
-                                                    minimumFractionDigits: 2,
-                                                    maximumFractionDigits: 2
-                                                })}
-                                                <span className="text-lg ml-2 opacity-40 font-bold tracking-normal">CUP</span>
-                                            </p>
-                                            <div className="absolute top-8 right-8 bg-black/20 px-3 py-1 rounded-full text-[9px] font-black">1 : {tasaActual}</div>
-                                        </div>
-                                    </div>
-                                ) : (
-                                    <div className="space-y-3 max-h-[280px] overflow-y-auto no-scrollbar">
-                                        {todasLasOfertas.filter(o => o.categoria?.toLowerCase().trim().includes(categoriaActiva.toLowerCase().slice(0,3))).map((o, i) => (
-                                            <div key={i} className="flex justify-between items-center p-5 bg-white/[0.03] rounded-2xl border border-white/5 hover:border-blue-500/30 transition-all cursor-pointer" onClick={() => playSound(600)}>
-                                                <div className="flex-1">
-                                                    <p className="text-[10px] font-black uppercase tracking-widest">{o.nombre}</p>
-                                                </div>
-                                                <p className="text-xs font-black text-blue-400">R$ {parseCurrency(o.precio).toFixed(2).replace('.', ',')}</p>
-                                            </div>
-                                        ))}
-                                    </div>
-                                )}
-                            </div>
-
-                            <div className="mt-10 space-y-6">
-                                <input
-                                    type="text"
-                                    placeholder="ID / TARJETA / TELÉFONO"
-                                    value={numero}
-                                    onChange={e => setNumero(e.target.value.toUpperCase())}
-                                    className={`w-full bg-black/50 border ${escaneando ? 'border-red-500/50' : esNumeroValido ? 'border-emerald-500/50' : 'border-white/10'} p-6 rounded-2xl text-center font-black tracking-[0.4em] text-xs transition-all outline-none`}
-                                />
-                                <div className="grid grid-cols-2 gap-4">
-                                    <button onClick={() => setMostrarTicket(true)} className="bg-white text-black py-5 rounded-2xl font-black text-[9px] uppercase tracking-widest hover:bg-blue-500 hover:text-white transition-all">Generar Orden</button>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+                ))}
             </div>
 
-            {mostrarTicket && (
-                <div className="fixed inset-0 z-[100] bg-black/90 backdrop-blur-xl flex items-center justify-center p-6" onClick={() => setMostrarTicket(false)}>
-                    <div className="bg-white text-black w-full max-w-xs rounded-[2rem] overflow-hidden shadow-2xl" onClick={e => e.stopPropagation()}>
-                        <div className="p-8 text-center space-y-4">
-                            <p className="text-[10px] font-black uppercase">Recibo Nexus</p>
-                            <div className="py-4 border-y border-slate-100 space-y-2">
-                                <div className="flex justify-between text-xs"><span>Envía:</span> <b>{monto} BRL</b></div>
-                                <div className="flex justify-between text-xs text-blue-600"><span>Recibe:</span> <b>{(monto * tasaActual).toLocaleString('es-CU' as Intl.LocalesArgument, { minimumFractionDigits: 2 })} CUP</b></div>
+            <div className="grid lg:grid-cols-12 gap-6">
+
+                {/* PANEL IZQUIERDO: CALCULADORA DE TRADING */}
+                <section className="lg:col-span-8 space-y-6">
+                    <div className="bg-[#0a0f1a] border border-white/5 rounded-2xl p-8 relative overflow-hidden">
+                        <div className="absolute top-0 right-0 p-4 opacity-10">
+                            <svg width="100" height="100" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1"><path d="M3 3v18h18M7 16l4-4 4 4 5-8" /></svg>
+                        </div>
+
+                        <h2 className="text-xs font-bold text-blue-500 uppercase tracking-[0.3em] mb-10">Market Operations</h2>
+
+                        <div className="grid md:grid-cols-2 gap-12">
+                            <div className="space-y-6">
+                                <div>
+                                    <label className="text-[10px] uppercase font-bold text-slate-500 block mb-3">Amount (BRL)</label>
+                                    <input
+                                        type="number"
+                                        value={monto}
+                                        onChange={(e) => setMonto(Number(e.target.value))}
+                                        className="bg-transparent text-6xl font-black text-white outline-none w-full tracking-tighter"
+                                    />
+                                </div>
+                                <div>
+                                    <label className="text-[10px] uppercase font-bold text-slate-500 block mb-3">Beneficiary Account</label>
+                                    <input
+                                        type="text"
+                                        placeholder="Enter ID / Card Number"
+                                        value={beneficiario}
+                                        onChange={(e) => setBeneficiario(e.target.value.toUpperCase())}
+                                        className="bg-white/5 border border-white/10 w-full p-4 rounded-xl text-white font-bold outline-none focus:border-blue-500/50 transition-all"
+                                    />
+                                </div>
                             </div>
-                            <button className="w-full bg-blue-600 text-white py-4 rounded-xl font-black text-[9px] uppercase">Confirmar WhatsApp</button>
+
+                            <div className="bg-blue-600/5 border border-blue-500/10 rounded-3xl p-8 flex flex-col justify-between">
+                                <div>
+                                    <p className="text-[10px] font-bold text-blue-400 uppercase tracking-widest mb-1">Execution Price</p>
+                                    <p className="text-5xl font-black text-white">
+                                        {totalCUP.toLocaleString('es-CU' as Intl.LocalesArgument, { minimumFractionDigits: 2 })}
+                                        <span className="text-sm ml-2 opacity-40">CUP</span>
+                                    </p>
+                                </div>
+                                <button
+                                    onClick={ejecutarOrden}
+                                    disabled={isProcessing}
+                                    className={`w-full py-5 rounded-2xl font-black uppercase tracking-widest transition-all ${isProcessing ? 'bg-slate-800' : 'bg-blue-600 hover:bg-blue-500 text-white shadow-[0_0_30px_rgba(59,130,246,0.3)]'}`}
+                                >
+                                    {isProcessing ? 'Verifying...' : 'Execute Transaction'}
+                                </button>
+                            </div>
                         </div>
                     </div>
-                </div>
-            )}
 
-            <style jsx>{`
-                @keyframes scan { 
-                    0%, 100% { top: 0%; opacity: 0; } 
-                    10%, 90% { opacity: 1; }
-                    50% { top: 100%; }
-                }
-            `}</style>
+                    {/* GRÁFICO SIMULADO / TENDENCIA */}
+                    <div className="bg-[#0a0f1a] border border-white/5 rounded-2xl p-6 h-48 flex items-end gap-1">
+                        {[...Array(30)].map((_, i) => (
+                            <div
+                                key={i}
+                                className="flex-1 bg-blue-500/20 hover:bg-blue-500/50 transition-all rounded-t-sm"
+                                style={{ height: `${Math.random() * 80 + 20}%` }}
+                            ></div>
+                        ))}
+                    </div>
+                </section>
+
+                {/* PANEL DERECHO: HISTORIAL DE ÓRDENES */}
+                <aside className="lg:col-span-4 space-y-6">
+                    <div className="bg-[#0a0f1a] border border-white/5 rounded-2xl p-6 h-full min-h-[500px]">
+                        <h3 className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-6">Recent Activity</h3>
+
+                        <div className="space-y-4">
+                            {history.length === 0 ? (
+                                <div className="text-center py-20 opacity-20">
+                                    <p className="text-xs uppercase font-bold tracking-widest">No active orders</p>
+                                </div>
+                            ) : (
+                                history.map((order) => (
+                                    <div key={order.id} className="bg-white/5 border border-white/5 p-4 rounded-xl animate-in slide-in-from-right-4 duration-500">
+                                        <div className="flex justify-between items-start mb-2">
+                                            <span className="text-[9px] font-black text-blue-500">#{order.id}</span>
+                                            <span className="text-[9px] text-slate-600">{order.time}</span>
+                                        </div>
+                                        <div className="flex justify-between items-end">
+                                            <div>
+                                                <p className="text-xs font-bold text-white">{order.montoBRL} BRL</p>
+                                                <p className="text-[8px] text-slate-500 uppercase tracking-tighter">Target: {order.target.slice(0,12)}...</p>
+                                            </div>
+                                            <p className="text-sm font-black text-emerald-500">+{order.totalCUP.toFixed(0)} CUP</p>
+                                        </div>
+                                    </div>
+                                ))
+                            )}
+                        </div>
+                    </div>
+                </aside>
+            </div>
+
+            {/* FOOTER DE ESTADO */}
+            <footer className="mt-8 flex justify-between items-center text-[8px] font-bold text-slate-600 uppercase tracking-[0.4em]">
+                <div>Nexus OS v4.0.2 // Global Connectivity</div>
+                <div className="flex gap-4">
+                    <span className="text-emerald-500">Sync: OK</span>
+                    <span className="text-blue-500">Lat: 22ms</span>
+                </div>
+            </footer>
         </main>
     );
 }
