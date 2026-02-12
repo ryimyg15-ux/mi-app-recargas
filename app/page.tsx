@@ -1,178 +1,212 @@
 'use client';
-import RecargaCard from './components/RecargaCard';
+import { useState, useEffect, useMemo } from 'react';
+// @ts-ignore
+import Papa from 'papaparse';
 
-export default function Home() {
+export default function NexusPremium() {
+    // --- ESTADOS ---
+    const [todasLasOfertas, setTodasLasOfertas] = useState<any[]>([]);
+    const [categoriaActiva, setCategoriaActiva] = useState('RECARGAS');
+    const [servicio, setServicio] = useState('Recarga (ETECSA)');
+    const [tasas, setTasas] = useState({ r1: 92, r2: 96, r3: 97, r4: 98 });
+    const [monto, setMonto] = useState<number>(100);
+    const [numero, setNumero] = useState('');
+    const [fotoGrande, setFotoGrande] = useState<string | null>(null);
+
+    // --- CARGA DE DATOS (Tu Excel) ---
+    useEffect(() => {
+        const SHEET_ID = '1x4ClX7vmGGsfn2U7YmcS7Uq5VQm88-haaOvBDGsvvQs';
+        const URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&gid=0`;
+        Papa.parse(URL, {
+            download: true,
+            header: true,
+            complete: (res: any) => {
+                const data = res.data.filter((o: any) => o.nombre);
+                setTodasLasOfertas(data);
+                const buscarTasa = (n: string, d: number) => {
+                    const f = data.find((o: any) => o.nombre?.includes(n));
+                    return f ? parseFloat(f.precio.replace(/[^0-9.]/g, '')) : d;
+                };
+                setTasas({
+                    r1: buscarTasa('Tasa Rango 1', 92),
+                    r2: buscarTasa('Tasa Rango 2', 96),
+                    r3: buscarTasa('Tasa Rango 3', 97),
+                    r4: buscarTasa('Tasa Rango 4', 98)
+                });
+            }
+        });
+    }, []);
+
+    const tasaActual = monto >= 1000 ? tasas.r4 : monto >= 500 ? tasas.r3 : monto >= 100 ? tasas.r2 : tasas.r1;
+    const ofertasFiltradas = todasLasOfertas.filter(o => o.categoria?.trim().toLowerCase() === servicio.trim().toLowerCase());
+
     return (
-        <main className="min-h-screen bg-[#F8FAFC] relative overflow-hidden font-sans">
+        <main className="min-h-screen bg-[#020617] text-slate-100 font-sans selection:bg-blue-500/30 overflow-x-hidden">
 
-            {/* FONDO DE FUSIÓN DE BANDERAS (Abstracto y Elegante) */}
-            <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none opacity-40">
-                {/* Lado Brasil (Verde/Amarillo) - Esquina Superior Izquierda */}
-                <div className="absolute -top-[10%] -left-[10%] w-[60%] h-[60%] bg-gradient-to-br from-[#009739] to-[#FFDF00] rounded-full blur-[140px] opacity-30"></div>
-
-                {/* Lado Cuba (Azul/Rojo) - Esquina Inferior Derecha */}
-                <div className="absolute -bottom-[10%] -right-[10%] w-[60%] h-[60%] bg-gradient-to-tl from-[#CF142B] to-[#002A8F] rounded-full blur-[140px] opacity-30"></div>
+            {/* AMBIENTE VISUAL (AURAS) */}
+            <div className="fixed inset-0 pointer-events-none">
+                <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] bg-[#009739]/10 rounded-full blur-[120px]"></div>
+                <div className="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] bg-[#CF142B]/10 rounded-full blur-[120px]"></div>
+                <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20 brightness-50 contrast-150"></div>
             </div>
 
-            <div className="relative z-10 max-w-7xl mx-auto px-6 py-8">
+            <div className="relative z-10 max-w-6xl mx-auto px-6 py-10">
 
-                {/* NAV PREMIUM */}
-                <nav className="flex justify-between items-center mb-16 bg-white/70 backdrop-blur-xl p-5 rounded-[2.5rem] border border-white shadow-sm">
+                {/* HEADER MINIMALISTA */}
+                <header className="flex justify-between items-center mb-16 backdrop-blur-md bg-white/5 p-6 rounded-[2rem] border border-white/10">
                     <div className="flex items-center gap-4">
-                        <div className="relative">
-                            <div className="absolute -inset-1 bg-gradient-to-r from-[#009739] to-[#002A8F] rounded-2xl blur-sm opacity-50"></div>
-                            <div className="relative w-12 h-12 bg-[#002A8F] rounded-xl flex items-center justify-center shadow-xl">
-                                <span className="text-white font-black text-2xl tracking-tighter italic">N</span>
-                            </div>
-                        </div>
-                        <div>
-                            <h1 className="text-[#002A8F] font-black tracking-tighter text-2xl leading-none">NEXUS</h1>
-                            <div className="flex items-center gap-2">
-                                <span className="text-slate-400 text-[8px] font-black tracking-[0.3em] uppercase">Premium Bridge</span>
-                                <div className="flex gap-1">
-                                    <span className="w-2 h-1 bg-[#009739] rounded-full"></span>
-                                    <span className="w-2 h-1 bg-[#CF142B] rounded-full"></span>
-                                </div>
-                            </div>
-                        </div>
+                        <div className="w-10 h-10 bg-gradient-to-tr from-blue-600 to-emerald-500 rounded-xl flex items-center justify-center font-black text-xl shadow-lg">N</div>
+                        <h1 className="font-black tracking-widest text-sm uppercase">Nexus <span className="text-blue-500">R&Day</span></h1>
                     </div>
-
-                    <div className="hidden md:flex items-center gap-8">
-                        <button className="bg-gradient-to-r from-[#009739] to-[#002A8F] text-white px-8 py-3 rounded-full text-[10px] font-black tracking-widest transition-all hover:scale-105 active:scale-95 shadow-lg shadow-blue-900/20">
-                            SOPORTE WHATSAPP
-                        </button>
+                    <div className="hidden md:flex gap-8 text-[10px] font-black tracking-[0.3em] uppercase opacity-50">
+                        <span className="hover:opacity-100 cursor-pointer transition-all">Seguridad</span>
+                        <span className="hover:opacity-100 cursor-pointer transition-all">Tasas</span>
+                        <span className="hover:opacity-100 cursor-pointer transition-all">Ayuda</span>
                     </div>
-                </nav>
+                </header>
 
-                {/* HERO SECTION */}
-                <div className="grid lg:grid-cols-2 gap-12 items-center mb-20">
-                    <div className="space-y-8">
-                        <div className="inline-flex items-center gap-3 bg-white border border-slate-200 px-4 py-2 rounded-full shadow-sm">
-                            <span className="flex gap-1">
-                                <span className="w-3 h-3 rounded-full bg-[#009739]"></span>
-                                <span className="w-3 h-3 rounded-full bg-[#002A8F]"></span>
-                                <span className="w-3 h-3 rounded-full bg-[#CF142B]"></span>
-                            </span>
-                            <span className="text-slate-500 text-[9px] font-black uppercase tracking-[0.2em]">Brazil ⟷ Cuba Direct Link</span>
+                <div className="grid lg:grid-cols-12 gap-8 items-start">
+
+                    {/* COLUMNA IZQUIERDA: TEXTO IMPACTO */}
+                    <div className="lg:col-span-5 space-y-8 pt-10">
+                        <div className="inline-block px-4 py-1.5 rounded-full bg-blue-500/10 border border-blue-500/20 text-blue-400 text-[9px] font-black uppercase tracking-widest">
+                            Direct Connection • BR ↔ CU
                         </div>
-
-                        <h2 className="text-6xl md:text-8xl font-black text-[#002A8F] leading-[0.9] tracking-tighter">
-                            De Corazón <br />
-                            <span className="text-[#009739]">a Corazón.</span>
+                        <h2 className="text-6xl md:text-8xl font-black leading-[0.85] tracking-tighter italic">
+                            EL FUTURO ES <br />
+                            <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-500 via-white to-emerald-400">DIRECTO.</span>
                         </h2>
-
-                        <p className="text-slate-600 text-lg font-medium leading-relaxed max-w-lg">
-                            La unión perfecta entre la agilidad del <span className="text-[#009739] font-bold">PIX Brasileño</span> y la alegría de recibir en <span className="text-[#CF142B] font-bold">Cuba</span>. Sin vueltas, sin esperas.
+                        <p className="text-slate-400 text-lg font-medium leading-relaxed max-w-sm">
+                            Olvídate de las esperas. Envía dinero y recargas con la infraestructura más potente del mercado.
                         </p>
 
-                        {/* FLOW STEPS */}
-                        <div className="flex items-center gap-6">
-                            <div className="flex -space-x-3">
-                                <div className="w-12 h-12 rounded-full bg-[#009739] border-4 border-white flex items-center justify-center text-white text-xs font-bold shadow-lg">BR</div>
-                                <div className="w-12 h-12 rounded-full bg-[#CF142B] border-4 border-white flex items-center justify-center text-white text-xs font-bold shadow-lg">CU</div>
+                        <div className="flex gap-4 pt-4">
+                            <div className="p-4 bg-white/5 rounded-3xl border border-white/5 flex-1">
+                                <p className="text-2xl font-black text-emerald-500">2min</p>
+                                <p className="text-[8px] font-bold text-slate-500 uppercase">Tiempo promedio</p>
                             </div>
-                            <div className="h-[1px] w-12 bg-slate-300"></div>
-                            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-tight">
-                                Transferencias <br/> Instantáneas
-                            </p>
-                        </div>
-                    </div>
-
-                    {/* TARJETA DE RECARGA (El componente) */}
-                    <div className="relative group">
-                        {/* El "Brillo" con los colores de la bandera */}
-                        <div className="absolute -inset-4 bg-gradient-to-tr from-[#009739] via-[#FFDF00] to-[#CF142B] rounded-[3.5rem] blur-2xl opacity-20 group-hover:opacity-40 transition-all duration-700"></div>
-
-                        <div className="relative bg-white rounded-[3rem] shadow-2xl border border-white p-2">
-                            <div className="rounded-[2.5rem] overflow-hidden bg-white">
-                                <RecargaCard />
+                            <div className="p-4 bg-white/5 rounded-3xl border border-white/5 flex-1">
+                                <p className="text-2xl font-black text-blue-500">24/7</p>
+                                <p className="text-[8px] font-bold text-slate-500 uppercase">Soporte Activo</p>
                             </div>
                         </div>
                     </div>
-                </div>
 
-                {/* INFO BANNER - DISEÑO "ELASTIC FLOW" */}
-                <div className="relative mt-12">
-                    {/* Línea decorativa de fondo (solo visible en desktop) */}
-                    <div className="hidden md:block absolute top-1/2 left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-slate-200 to-transparent -z-10"></div>
+                    {/* COLUMNA DERECHA: LA APP (GLASS CARD) */}
+                    <div className="lg:col-span-7 relative group">
+                        <div className="absolute -inset-1 bg-gradient-to-r from-blue-600 to-emerald-500 rounded-[3rem] blur opacity-20 group-hover:opacity-40 transition duration-1000"></div>
 
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-6 md:gap-4">
-                        {[
-                            {
-                                color: '#009739', // Verde Brasil
-                                icon: '💸',
-                                t: 'PAGO PIX',
-                                d: 'Instantáneo',
-                                bg: 'bg-green-50'
-                            },
-                            {
-                                color: '#002A8F', // Azul Cuba
-                                icon: '📲',
-                                t: 'RECARGA',
-                                d: 'Saldo Directo',
-                                bg: 'bg-blue-50'
-                            },
-                            {
-                                color: '#CF142B', // Rojo Cuba
-                                icon: '📦',
-                                t: 'COMBOS',
-                                d: 'Puerta a Puerta',
-                                bg: 'bg-red-50'
-                            },
-                            {
-                                color: '#FFDF00', // Amarillo Brasil
-                                icon: '🛡️',
-                                t: 'GARANTÍA',
-                                d: 'Nexus 24/7',
-                                bg: 'bg-yellow-50'
-                            }
-                        ].map((item, i) => (
-                            <div key={i} className="group relative flex flex-col items-center text-center">
-                                {/* Círculo con Icono y Efecto de Hover */}
-                                <div className={`relative w-16 h-16 mb-4 flex items-center justify-center rounded-2xl rotate-3 group-hover:rotate-0 transition-all duration-500 shadow-lg shadow-slate-200/50 ${item.bg}`}>
-                                    {/* Borde de color de la bandera */}
-                                    <div
-                                        className="absolute inset-0 rounded-2xl border-2 opacity-20 group-hover:opacity-100 transition-opacity"
-                                        style={{ borderColor: item.color }}
-                                    ></div>
-                                    <span className="text-2xl group-hover:scale-110 transition-transform duration-300">{item.icon}</span>
-                                </div>
+                        <div className="relative bg-white/5 backdrop-blur-3xl rounded-[2.5rem] border border-white/10 p-8 shadow-2xl">
 
-                                {/* Textos Estilizados */}
-                                <div className="space-y-1">
-                                    <h4 className="font-black text-[11px] tracking-[0.15em] text-slate-800 uppercase">
-                                        {item.t}
-                                    </h4>
-                                    <div className="flex items-center justify-center gap-2">
-                                        <span className="w-1 h-1 rounded-full" style={{ backgroundColor: item.color }}></span>
-                                        <p className="text-[9px] font-bold text-slate-400 uppercase tracking-tighter">
-                                            {item.d}
-                                        </p>
+                            {/* SELECTOR CATEGORÍAS */}
+                            <div className="grid grid-cols-3 gap-3 mb-10">
+                                {[
+                                    {id:'RECARGAS', icon:'📱', s:['Recarga (ETECSA)', 'Recarga (NAUTA)']},
+                                    {id:'TIENDA', icon:'🛒', s:['Combo de Comida/Aseo', 'Electrodomésticos']},
+                                    {id:'DINERO', icon:'💸', s:['Envío de Dinero']}
+                                ].map(cat => (
+                                    <button key={cat.id} onClick={() => { setCategoriaActiva(cat.id); setServicio(cat.s[0]); }}
+                                            className={`p-4 rounded-3xl transition-all border flex flex-col items-center gap-2 ${categoriaActiva === cat.id ? 'bg-blue-600 border-blue-400 shadow-lg shadow-blue-500/20 scale-105' : 'bg-white/5 border-white/10 opacity-40 hover:opacity-100'}`}>
+                                        <span className="text-xl">{cat.icon}</span>
+                                        <span className="text-[8px] font-black uppercase tracking-widest">{cat.id}</span>
+                                    </button>
+                                ))}
+                            </div>
+
+                            {/* SELECTOR SUB-SERVICIO */}
+                            <div className="flex gap-2 mb-8 overflow-x-auto no-scrollbar">
+                                {categoriaActiva !== 'DINERO' && (
+                                    [...new Set(todasLasOfertas.filter(o => o.categoria?.includes(categoriaActiva === 'RECARGAS' ? 'Recarga' : '')).map(o => o.categoria))].map(s => (
+                                        <button key={s} onClick={() => setServicio(s)}
+                                                className={`px-6 py-2 rounded-full text-[9px] font-black uppercase tracking-widest transition-all ${servicio === s ? 'bg-white text-black' : 'bg-white/5 text-white/40'}`}>
+                                            {s}
+                                        </button>
+                                    ))
+                                )}
+                            </div>
+
+                            {/* CONTENIDO DINÁMICO */}
+                            <div className="min-h-[280px]">
+                                {categoriaActiva === 'DINERO' ? (
+                                    <div className="space-y-6">
+                                        <div className="flex justify-between items-center px-4">
+                                            <span className="text-[10px] font-black opacity-40 uppercase tracking-widest">Calculadora de Envío</span>
+                                            <span className="text-[10px] font-black text-emerald-400 uppercase tracking-widest">Tasa: 1:{tasaActual}</span>
+                                        </div>
+                                        <div className="grid md:grid-cols-2 gap-4">
+                                            <div className="bg-white/5 p-6 rounded-[2rem] border border-white/10">
+                                                <p className="text-[8px] font-black opacity-40 uppercase mb-2">Tú envías (BRL)</p>
+                                                <input type="number" value={monto} onChange={e => setMonto(Number(e.target.value))} className="bg-transparent text-4xl font-black outline-none w-full" />
+                                            </div>
+                                            <div className="bg-blue-600 p-6 rounded-[2rem] shadow-xl shadow-blue-500/20">
+                                                <p className="text-[8px] font-black opacity-70 uppercase mb-2">Reciben (CUP)</p>
+                                                <p className="text-4xl font-black">{(monto * tasaActual).toLocaleString()}</p>
+                                            </div>
+                                        </div>
+                                        <div className="grid grid-cols-4 gap-2">
+                                            {[
+                                                {l:'10+', v:tasas.r1}, {l:'100+', v:tasas.r2}, {l:'500+', v:tasas.r3}, {l:'1000+', v:tasas.r4}
+                                            ].map((t, i) => (
+                                                <div key={i} className={`p-3 rounded-2xl border text-center ${tasaActual === t.v ? 'border-emerald-500 bg-emerald-500/10' : 'border-white/5 bg-white/5 opacity-30'}`}>
+                                                    <p className="text-[7px] font-black">{t.l}</p>
+                                                    <p className="text-xs font-black">{t.v}</p>
+                                                </div>
+                                            ))}
+                                        </div>
                                     </div>
-                                </div>
-
-                                {/* Badge de Conector (solo en desktop entre elementos) */}
-                                {i < 3 && (
-                                    <div className="hidden md:block absolute top-8 -right-2 text-slate-200 font-light text-xl">
-                                        ›
+                                ) : (
+                                    <div className="space-y-3 max-h-[300px] overflow-y-auto pr-2 no-scrollbar">
+                                        {ofertasFiltradas.map((o, idx) => (
+                                            <div key={idx} className="flex items-center gap-4 p-4 bg-white/5 rounded-3xl border border-white/5 hover:border-white/20 transition-all group/item">
+                                                {o.foto ? (
+                                                    <img src={o.foto} onClick={() => setFotoGrande(o.foto!)} className="w-12 h-12 rounded-xl object-cover cursor-zoom-in" />
+                                                ) : (
+                                                    <div className="w-12 h-12 bg-white/10 rounded-xl flex items-center justify-center">📦</div>
+                                                )}
+                                                <div className="flex-1">
+                                                    <p className="text-[10px] font-black uppercase">{o.nombre}</p>
+                                                    <p className="text-[8px] opacity-40 font-bold uppercase tracking-tighter">{o.descripcion}</p>
+                                                </div>
+                                                <div className="text-right">
+                                                    <p className="text-xs font-black text-emerald-400">{o.precio}</p>
+                                                </div>
+                                            </div>
+                                        ))}
                                     </div>
                                 )}
                             </div>
-                        ))}
+
+                            {/* ACCIÓN FINAL */}
+                            <div className="mt-10 space-y-4">
+                                <input type="text" placeholder="Número de teléfono o Tarjeta" value={numero} onChange={e => setNumero(e.target.value)}
+                                       className="w-full bg-white/5 border border-white/10 p-5 rounded-2xl text-center font-black tracking-widest text-sm focus:bg-white/10 transition-all outline-none" />
+                                <div className="grid grid-cols-2 gap-4">
+                                    <button className="bg-white text-black py-5 rounded-2xl font-black text-[10px] uppercase tracking-[0.2em] hover:scale-[1.02] active:scale-95 transition-all">Jonathan WhatsApp</button>
+                                    <button className="bg-blue-600 text-white py-5 rounded-2xl font-black text-[10px] uppercase tracking-[0.2em] hover:scale-[1.02] active:scale-95 transition-all">David WhatsApp</button>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
-                <footer className="mt-20 py-10 border-t border-slate-200 flex flex-col md:flex-row justify-between items-center gap-6">
-                    <p className="text-slate-400 text-[10px] font-black uppercase tracking-[0.4em]">
-                        © 2026 Nexus R&DAY Premium Connectivity
-                    </p>
-                    <div className="flex gap-4 items-center">
-                        <span className="w-8 h-5 bg-[#009739] rounded-sm opacity-50"></span>
-                        <span className="w-8 h-5 bg-[#002A8F] rounded-sm opacity-50"></span>
-                        <span className="w-8 h-5 bg-[#CF142B] rounded-sm opacity-50"></span>
+                {/* FOOTER */}
+                <footer className="mt-24 pt-10 border-t border-white/5 flex flex-col md:flex-row justify-between items-center gap-8">
+                    <p className="text-[9px] font-black uppercase tracking-[0.5em] opacity-30">© 2026 Nexus Premium Systems</p>
+                    <div className="flex gap-10 opacity-20 grayscale">
+                        <span className="text-lg font-black italic">PIX</span>
+                        <span className="text-lg font-black italic">ZELLE</span>
+                        <span className="text-lg font-black italic">ETECSA</span>
                     </div>
                 </footer>
             </div>
+
+            {/* MODAL FOTO */}
+            {fotoGrande && (
+                <div className="fixed inset-0 z-[100] bg-black/95 backdrop-blur-xl flex items-center justify-center p-6" onClick={() => setFotoGrande(null)}>
+                    <img src={fotoGrande} className="max-w-full max-h-[80vh] rounded-[2rem] shadow-2xl shadow-blue-500/20" />
+                    <p className="absolute bottom-10 font-black text-[10px] uppercase tracking-[0.5em]">Toca para cerrar</p>
+                </div>
+            )}
         </main>
     );
 }
