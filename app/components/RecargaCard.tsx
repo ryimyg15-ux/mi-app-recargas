@@ -29,14 +29,23 @@ export default function NexusCyberSecurity() {
         } catch (e) { console.log("Audio not supported"); }
     };
 
-    // --- FIX PRECIO EXCEL ---
-    const parseCurrency = (val: any) => {
+    // --- FIX DEFINITIVO DE PRECIO (96,00 -> 96) ---
+    const parseCurrency = (val: any): number => {
         if (!val) return 0;
-        const clean = val.toString().replace('R$', '').replace(/\s/g, '').replace(',', '.');
-        return parseFloat(clean) || 0;
+        let s = val.toString().replace('R$', '').replace(/\s/g, '');
+
+        // Si el número viene como "1.200,00", eliminamos el punto de miles y cambiamos la coma por punto
+        if (s.includes(',') && s.includes('.')) {
+            s = s.replace(/\./g, '').replace(',', '.');
+        } else {
+            // Si solo trae coma (ej: 96,00), la cambiamos por punto
+            s = s.replace(',', '.');
+        }
+
+        const num = parseFloat(s);
+        return isNaN(num) ? 0 : num;
     };
 
-    // --- LÓGICA DE VALIDACIÓN ---
     const esNumeroValido = numero.length >= 8;
     const tasaActual = monto >= 1000 ? tasas.r4 : monto >= 500 ? tasas.r3 : monto >= 100 ? tasas.r2 : tasas.r1;
 
@@ -67,7 +76,6 @@ export default function NexusCyberSecurity() {
         });
     }, []);
 
-    // Simulación de Escaneo
     useEffect(() => {
         if (numero.length === 10 && !escaneando) {
             setEscaneando(true);
@@ -81,13 +89,9 @@ export default function NexusCyberSecurity() {
 
     return (
         <main className="min-h-screen bg-[#020408] text-white font-sans overflow-x-hidden relative selection:bg-blue-500/50">
-
-            {/* BACKGROUND ESTRUCTURAL */}
             <div className="absolute inset-0 opacity-10 pointer-events-none bg-[radial-gradient(#1e293b_1px,transparent_1px)] bg-[size:40px_40px]"></div>
 
             <div className="relative z-10 max-w-5xl mx-auto px-6 py-12">
-
-                {/* HEADER */}
                 <header className="flex justify-between items-center mb-16">
                     <div className="flex items-center gap-3 group cursor-pointer">
                         <div className="w-10 h-10 border-2 border-blue-500 rounded-xl flex items-center justify-center font-black italic group-hover:bg-blue-500 transition-all group-hover:text-black">N</div>
@@ -96,38 +100,22 @@ export default function NexusCyberSecurity() {
                 </header>
 
                 <div className="grid lg:grid-cols-12 gap-12 items-start">
-
-                    {/* INFO PANEL */}
                     <div className="lg:col-span-5 space-y-8">
                         <h2 className="text-7xl font-black leading-[0.8] tracking-tighter italic uppercase">
                             Digital <br /> <span className="text-blue-600">Assets</span>
                         </h2>
-                        <div className="p-6 bg-white/[0.02] border border-white/5 rounded-3xl space-y-4">
-                            <div className="flex justify-between items-center">
-                                <span className="text-[9px] font-black text-slate-500 uppercase">Estado del Servidor</span>
-                                <span className="text-[9px] font-black text-emerald-500 uppercase">Activo 24/7</span>
-                            </div>
-                            <div className="h-1 bg-white/5 rounded-full overflow-hidden">
-                                <div className="h-full bg-blue-600 w-[92%] animate-pulse"></div>
-                            </div>
-                        </div>
                     </div>
 
-                    {/* APP CARD */}
                     <div className="lg:col-span-7 relative group">
                         <div className={`absolute -inset-1 rounded-[3rem] blur-2xl transition-all duration-1000 ${escaneando ? 'bg-red-500/20' : 'bg-blue-500/10'}`}></div>
 
                         <div className="relative bg-[#0a0c14]/90 border border-white/10 rounded-[3rem] p-8 md:p-10 backdrop-blur-3xl overflow-hidden">
-
-                            {/* SCANNER LINE */}
                             {escaneando && (
                                 <div className="absolute inset-0 z-50 pointer-events-none">
                                     <div className="w-full h-1 bg-blue-400 shadow-[0_0_25px_#3b82f6] animate-[scan_2.5s_ease-in-out_infinite] absolute"></div>
-                                    <div className="absolute inset-0 bg-blue-600/5 animate-pulse"></div>
                                 </div>
                             )}
 
-                            {/* TABS */}
                             <div className="flex gap-2 mb-10">
                                 {['RECARGAS', 'TIENDA', 'DINERO'].map(cat => (
                                     <button key={cat} onClick={() => { playSound(); setCategoriaActiva(cat); }}
@@ -137,7 +125,6 @@ export default function NexusCyberSecurity() {
                                 ))}
                             </div>
 
-                            {/* MAIN CALCULATOR */}
                             <div className="min-h-[280px]">
                                 {categoriaActiva === 'DINERO' ? (
                                     <div className="space-y-6">
@@ -164,7 +151,6 @@ export default function NexusCyberSecurity() {
                                             <div key={i} className="flex justify-between items-center p-5 bg-white/[0.03] rounded-2xl border border-white/5 hover:border-blue-500/30 transition-all cursor-pointer" onClick={() => playSound(600)}>
                                                 <div className="flex-1">
                                                     <p className="text-[10px] font-black uppercase tracking-widest">{o.nombre}</p>
-                                                    <p className="text-[8px] text-slate-500 font-bold">{o.descripcion?.slice(0,40)}</p>
                                                 </div>
                                                 <p className="text-xs font-black text-blue-400">R$ {parseCurrency(o.precio).toFixed(2).replace('.', ',')}</p>
                                             </div>
@@ -173,22 +159,16 @@ export default function NexusCyberSecurity() {
                                 )}
                             </div>
 
-                            {/* DESTINATION INPUT */}
                             <div className="mt-10 space-y-6">
-                                <div className="relative">
-                                    <input
-                                        type="text"
-                                        placeholder="ID / TARJETA / TELÉFONO"
-                                        value={numero}
-                                        onChange={e => setNumero(e.target.value.toUpperCase())}
-                                        className={`w-full bg-black/50 border ${escaneando ? 'border-red-500/50' : esNumeroValido ? 'border-emerald-500/50' : 'border-white/10'} p-6 rounded-2xl text-center font-black tracking-[0.4em] text-xs transition-all outline-none`}
-                                    />
-                                    {escaneando && <p className="absolute -bottom-6 left-0 w-full text-center text-[7px] font-black text-red-500 animate-pulse tracking-widest">ENCRIPTANDO TRANSMISIÓN...</p>}
-                                </div>
-
+                                <input
+                                    type="text"
+                                    placeholder="ID / TARJETA / TELÉFONO"
+                                    value={numero}
+                                    onChange={e => setNumero(e.target.value.toUpperCase())}
+                                    className={`w-full bg-black/50 border ${escaneando ? 'border-red-500/50' : esNumeroValido ? 'border-emerald-500/50' : 'border-white/10'} p-6 rounded-2xl text-center font-black tracking-[0.4em] text-xs transition-all outline-none`}
+                                />
                                 <div className="grid grid-cols-2 gap-4">
                                     <button onClick={() => setMostrarTicket(true)} className="bg-white text-black py-5 rounded-2xl font-black text-[9px] uppercase tracking-widest hover:bg-blue-500 hover:text-white transition-all">Generar Orden</button>
-                                    <button className="bg-white/5 text-white py-5 rounded-2xl font-black text-[9px] uppercase tracking-widest border border-white/10">Soporte</button>
                                 </div>
                             </div>
                         </div>
@@ -196,24 +176,16 @@ export default function NexusCyberSecurity() {
                 </div>
             </div>
 
-            {/* MODAL TICKET DIGITAL */}
             {mostrarTicket && (
                 <div className="fixed inset-0 z-[100] bg-black/90 backdrop-blur-xl flex items-center justify-center p-6" onClick={() => setMostrarTicket(false)}>
-                    <div className="bg-white text-black w-full max-w-xs rounded-[2rem] overflow-hidden shadow-[0_0_50px_rgba(255,255,255,0.2)]" onClick={e => e.stopPropagation()}>
-                        <div className="bg-slate-900 p-6 text-white text-center">
-                            <p className="text-[10px] font-black tracking-widest uppercase mb-1">Nexus Order</p>
-                            <p className="text-[8px] opacity-40 uppercase">Válido por 15 minutos</p>
-                        </div>
-                        <div className="p-8 space-y-4 text-center">
-                            <div className="bg-slate-100 p-4 rounded-2xl inline-block mx-auto">
-                                <img src={`https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=NexusOrder-${numero}`} alt="QR" className="w-32 h-32 opacity-80" />
+                    <div className="bg-white text-black w-full max-w-xs rounded-[2rem] overflow-hidden shadow-2xl" onClick={e => e.stopPropagation()}>
+                        <div className="p-8 text-center space-y-4">
+                            <p className="text-[10px] font-black uppercase">Recibo Nexus</p>
+                            <div className="py-4 border-y border-slate-100 space-y-2">
+                                <div className="flex justify-between text-xs"><span>Envía:</span> <b>{monto} BRL</b></div>
+                                <div className="flex justify-between text-xs text-blue-600"><span>Recibe:</span> <b>{(monto * tasaActual).toLocaleString('es-CU' as Intl.LocalesArgument, { minimumFractionDigits: 2 })} CUP</b></div>
                             </div>
-                            <div className="space-y-2 py-4 border-y border-slate-100">
-                                <div className="flex justify-between text-[10px] font-bold"><span>ENVÍA:</span> <span>{monto} BRL</span></div>
-                                <div className="flex justify-between text-[10px] font-bold text-blue-600"><span>RECIBE:</span> <span>{(monto * tasaActual).toLocaleString('es-CU' as Intl.LocalesArgument, { minimumFractionDigits: 2 })} CUP</span></div>
-                                <div className="text-[9px] font-black opacity-30 tracking-tighter">ID: {numero || 'SIN ASIGNAR'}</div>
-                            </div>
-                            <button className="w-full bg-blue-600 text-white py-4 rounded-xl font-black text-[9px] uppercase tracking-widest">Enviar a WhatsApp</button>
+                            <button className="w-full bg-blue-600 text-white py-4 rounded-xl font-black text-[9px] uppercase">Confirmar WhatsApp</button>
                         </div>
                     </div>
                 </div>
@@ -225,7 +197,6 @@ export default function NexusCyberSecurity() {
                     10%, 90% { opacity: 1; }
                     50% { top: 100%; }
                 }
-                .no-scrollbar::-webkit-scrollbar { display: none; }
             `}</style>
         </main>
     );
