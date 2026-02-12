@@ -30,7 +30,7 @@ export default function NexusCyberSecurity() {
     };
 
     // --- FIX PRECIO EXCEL ---
-    const parseCurrency = (val: string) => {
+    const parseCurrency = (val: any) => {
         if (!val) return 0;
         const clean = val.toString().replace('R$', '').replace(/\s/g, '').replace(',', '.');
         return parseFloat(clean) || 0;
@@ -49,10 +49,14 @@ export default function NexusCyberSecurity() {
             complete: (res: any) => {
                 const data = res.data.filter((o: any) => o.nombre);
                 setTodasLasOfertas(data);
+
                 const getTasa = (n: string, d: number) => {
-                    const f = data.find((o: any) => o.nombre?.toLowerCase().includes(n.toLowerCase()));
+                    const f = data.find((o: any) =>
+                        o.nombre?.toLowerCase().trim().includes(n.toLowerCase().trim())
+                    );
                     return f ? parseCurrency(f.precio) : d;
                 };
+
                 setTasas({
                     r1: getTasa('Tasa Rango 1', 92),
                     r2: getTasa('Tasa Rango 2', 96),
@@ -73,7 +77,7 @@ export default function NexusCyberSecurity() {
                 playSound(1000, 'sine');
             }, 2500);
         }
-    }, [numero]);
+    }, [numero, escaneando]);
 
     return (
         <main className="min-h-screen bg-[#020408] text-white font-sans overflow-x-hidden relative selection:bg-blue-500/50">
@@ -145,7 +149,10 @@ export default function NexusCyberSecurity() {
                                         <div className="bg-gradient-to-br from-blue-600 to-blue-900 p-8 rounded-[2rem] shadow-2xl relative">
                                             <p className="text-[8px] font-black uppercase text-white/40 mb-2">Crédito en Cuba (CUP)</p>
                                             <p className="text-4xl font-black">
-                                                {(monto * tasaActual).toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                                                {(monto * tasaActual).toLocaleString('es-CU' as Intl.LocalesArgument, {
+                                                    minimumFractionDigits: 2,
+                                                    maximumFractionDigits: 2
+                                                })}
                                                 <span className="text-lg ml-2 opacity-40 font-bold tracking-normal">CUP</span>
                                             </p>
                                             <div className="absolute top-8 right-8 bg-black/20 px-3 py-1 rounded-full text-[9px] font-black">1 : {tasaActual}</div>
@@ -153,7 +160,7 @@ export default function NexusCyberSecurity() {
                                     </div>
                                 ) : (
                                     <div className="space-y-3 max-h-[280px] overflow-y-auto no-scrollbar">
-                                        {todasLasOfertas.filter(o => o.categoria?.toLowerCase().includes(categoriaActiva.toLowerCase().slice(0,3))).map((o, i) => (
+                                        {todasLasOfertas.filter(o => o.categoria?.toLowerCase().trim().includes(categoriaActiva.toLowerCase().slice(0,3))).map((o, i) => (
                                             <div key={i} className="flex justify-between items-center p-5 bg-white/[0.03] rounded-2xl border border-white/5 hover:border-blue-500/30 transition-all cursor-pointer" onClick={() => playSound(600)}>
                                                 <div className="flex-1">
                                                     <p className="text-[10px] font-black uppercase tracking-widest">{o.nombre}</p>
@@ -203,7 +210,7 @@ export default function NexusCyberSecurity() {
                             </div>
                             <div className="space-y-2 py-4 border-y border-slate-100">
                                 <div className="flex justify-between text-[10px] font-bold"><span>ENVÍA:</span> <span>{monto} BRL</span></div>
-                                <div className="flex justify-between text-[10px] font-bold text-blue-600"><span>RECIBE:</span> <span>{monto * tasaActual} CUP</span></div>
+                                <div className="flex justify-between text-[10px] font-bold text-blue-600"><span>RECIBE:</span> <span>{(monto * tasaActual).toLocaleString('es-CU' as Intl.LocalesArgument, { minimumFractionDigits: 2 })} CUP</span></div>
                                 <div className="text-[9px] font-black opacity-30 tracking-tighter">ID: {numero || 'SIN ASIGNAR'}</div>
                             </div>
                             <button className="w-full bg-blue-600 text-white py-4 rounded-xl font-black text-[9px] uppercase tracking-widest">Enviar a WhatsApp</button>
