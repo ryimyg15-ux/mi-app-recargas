@@ -12,6 +12,7 @@ interface Oferta {
 }
 
 export default function NexusApp() {
+    // --- ESTADOS ---
     const [todasLasOfertas, setTodasLasOfertas] = useState<Oferta[]>([]);
     const [categoriaActiva, setCategoriaActiva] = useState('RECARGAS');
     const [servicio, setServicio] = useState('Recarga (ETECSA)');
@@ -21,6 +22,7 @@ export default function NexusApp() {
     const [montoOperacion, setMontoOperacion] = useState<number>(100);
     const [tasaCup, setTasaCup] = useState<number>(0);
     const [fotoGrande, setFotoGrande] = useState<string | null>(null);
+    const [error, setError] = useState('');
 
     const menuCategorias = [
         { id: 'RECARGAS', icon: '📱', servicios: ['Recarga (ETECSA)', 'Recarga (NAUTA)'] },
@@ -31,6 +33,7 @@ export default function NexusApp() {
     const normalizar = (texto: string) =>
         texto ? texto.trim().toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "") : "";
 
+    // --- CARGA DE DATOS ---
     useEffect(() => {
         const SHEET_ID = '1x4ClX7vmGGsfn2U7YmcS7Uq5VQm88-haaOvBDGsvvQs';
         const URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&gid=0`;
@@ -53,103 +56,139 @@ export default function NexusApp() {
         return todasLasOfertas.filter(o => normalizar(o.categoria) === normalizar(servicio));
     }, [servicio, todasLasOfertas]);
 
+    useEffect(() => {
+        setOfertaSeleccionada(ofertasFiltradas[0] || null);
+    }, [ofertasFiltradas]);
+
+    // --- LÓGICA DE ENVÍO ---
+    const enviarPedido = () => {
+        if (!numero || error) return alert("Por favor, revisa los datos.");
+
+        let detalle = categoriaActiva === 'DINERO'
+            ? `💸 *OPERACIÓN DE ENVÍO*\n💰 *Envía:* ${montoOperacion} BRL\n🇨🇺 *Recibe:* ${(montoOperacion * tasaCup).toLocaleString()} CUP\n📈 *Tasa:* 1:${tasaCup}`
+            : `🛒 *PRODUCTO:* ${ofertaSeleccionada?.nombre}\n💵 *Precio:* ${ofertaSeleccionada?.precio}`;
+
+        const mensaje = `*NEXUS R&DAY*\n\n` +
+            `👤 *Servicio:* ${servicio}\n` +
+            `💳 *Pago:* ${pago}\n` +
+            `📍 *ID/Número:* ${numero}\n\n` +
+            `${detalle}`;
+
+        window.open(`https://wa.me/5547999222521?text=${encodeURIComponent(mensaje)}`, '_blank');
+    };
+
     return (
         <div className="bg-[#E0E5EC] min-h-screen p-4 flex items-center justify-center font-sans text-slate-700">
-            {/* Modal de Foto Grande */}
+
+            {/* Modal de Imagen Ampliada */}
             {fotoGrande && (
-                <div className="fixed inset-0 z-50 bg-black/80 flex items-center justify-center p-4" onClick={() => setFotoGrande(null)}>
-                    <img src={fotoGrande} className="max-w-full max-h-full rounded-2xl shadow-2xl" alt="Preview" />
+                <div className="fixed inset-0 z-50 bg-black/90 backdrop-blur-sm flex items-center justify-center p-6" onClick={() => setFotoGrande(null)}>
+                    <img src={fotoGrande} className="max-w-full max-h-[80vh] rounded-3xl shadow-2xl border-4 border-white/10" alt="Vista previa" />
+                    <p className="absolute bottom-10 text-white font-bold tracking-widest uppercase text-xs">Toca para cerrar</p>
                 </div>
             )}
 
-            <div className="bg-[#F0F2F5] w-full max-w-md rounded-[3rem] shadow-[20px_20px_60px_#bebebe,-20px_-20px_60px_#ffffff] overflow-hidden border border-white/50">
+            <div className="bg-[#F0F2F5] w-full max-w-md rounded-[3.5rem] shadow-[20px_20px_60px_#bebebe,-20px_-20px_60px_#ffffff] overflow-hidden border border-white/50">
 
-                {/* HEADER NEGRO */}
-                <div className="bg-[#1A1A1A] p-8 text-center">
-                    <h1 className="text-white font-black text-3xl tracking-tighter">NEXUS R&DAY</h1>
-                    <p className="text-blue-400 text-[10px] font-bold uppercase tracking-[0.3em] mt-1">Conectando Mundos</p>
+                {/* HEADER PREMIUM */}
+                <div className="bg-[#121212] p-10 text-center relative overflow-hidden">
+                    <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-b from-blue-500/10 to-transparent"></div>
+                    <h1 className="text-white font-black text-3xl tracking-tighter relative z-10">NEXUS R&DAY</h1>
+                    <p className="text-blue-400 text-[9px] font-black uppercase tracking-[0.4em] mt-2 relative z-10">Conectando Mundos</p>
                 </div>
 
-                <div className="p-6 space-y-8">
+                <div className="p-8 space-y-10">
 
-                    {/* SECCIÓN CATEGORÍAS */}
-                    <div className="space-y-3">
-                        <h2 className="text-[12px] font-black text-slate-400 uppercase ml-2 tracking-widest">Categorías</h2>
-                        <div className="flex gap-3 overflow-x-auto pb-2 no-scrollbar">
+                    {/* CATEGORÍAS NEUMÓRFICAS */}
+                    <div className="space-y-4">
+                        <h2 className="text-[11px] font-black text-slate-400 uppercase ml-4 tracking-[0.2em]">Categorías</h2>
+                        <div className="flex gap-4 overflow-x-auto pb-4 no-scrollbar px-2">
                             {menuCategorias.map((cat) => (
                                 <button key={cat.id}
                                         onClick={() => { setCategoriaActiva(cat.id); setServicio(cat.servicios[0]); }}
-                                        className={`flex items-center gap-2 px-5 py-3 rounded-full font-bold text-[10px] transition-all whitespace-nowrap ${
+                                        className={`flex flex-col items-center justify-center min-w-[85px] aspect-square rounded-[2rem] transition-all ${
                                             categoriaActiva === cat.id
                                                 ? 'bg-[#0084FF] text-white shadow-[inset_4px_4px_8px_#0066cc,4px_4px_12px_#ffffff]'
                                                 : 'bg-[#F0F2F5] text-slate-400 shadow-[6px_6px_12px_#d1d9e6,-6px_-6px_12px_#ffffff]'
                                         }`}>
-                                    <span>{cat.icon}</span> {cat.id}
+                                    <span className="text-2xl mb-1">{cat.icon}</span>
+                                    <span className="text-[8px] font-black uppercase">{cat.id}</span>
                                 </button>
                             ))}
                         </div>
                     </div>
 
-                    {/* ÁREA AZUL DINÁMICA */}
-                    <div className="bg-gradient-to-br from-[#00A2FF] to-[#0052FF] p-6 rounded-[2.5rem] shadow-xl shadow-blue-200">
-                        <h3 className="text-white/70 text-[10px] font-black uppercase mb-4 text-center">Detalles de Operación</h3>
+                    {/* SECCIÓN DINÁMICA (AZUL) */}
+                    <div className="bg-gradient-to-br from-[#00A2FF] to-[#0052FF] p-7 rounded-[3rem] shadow-[0_20px_40px_rgba(0,132,255,0.25)] relative">
+                        <div className="absolute top-4 right-8 w-12 h-12 bg-white/10 rounded-full blur-xl"></div>
 
                         {categoriaActiva === 'DINERO' ? (
-                            <div className="flex items-center justify-between gap-2 text-white">
+                            <div className="flex items-center justify-between gap-4 text-white py-2">
                                 <div className="text-center flex-1">
-                                    <p className="text-[8px] font-bold mb-2 uppercase opacity-60">Envías</p>
+                                    <p className="text-[8px] font-black mb-3 opacity-60 uppercase tracking-widest">Envías (BRL)</p>
                                     <input type="number" value={montoOperacion} onChange={e => setMontoOperacion(Number(e.target.value))}
-                                           className="w-full bg-white/10 rounded-2xl p-3 text-center font-black text-xl outline-none" />
+                                           className="w-full bg-white/20 rounded-2xl p-4 text-center font-black text-2xl outline-none border border-white/20 focus:bg-white/30 transition-all" />
                                 </div>
-                                <div className="text-2xl mt-4">→</div>
+                                <div className="text-3xl mt-6 opacity-40">→</div>
                                 <div className="text-center flex-1">
-                                    <p className="text-[8px] font-bold mb-2 uppercase opacity-60">Reciben</p>
-                                    <div className="bg-white/20 p-3 rounded-2xl font-black text-xl">
-                                        {(montoOperacion * tasaCup).toLocaleString()} <span className="text-[10px]">CUP</span>
+                                    <p className="text-[8px] font-black mb-3 opacity-60 uppercase tracking-widest">Reciben (CUP)</p>
+                                    <div className="bg-white/10 border border-white/20 p-4 rounded-2xl font-black text-2xl shadow-inner">
+                                        {(montoOperacion * tasaCup).toLocaleString()}
                                     </div>
                                 </div>
                             </div>
                         ) : (
-                            <div className="grid grid-cols-1 gap-2">
+                            <div className="space-y-3 max-h-[220px] overflow-y-auto no-scrollbar py-1">
                                 {ofertasFiltradas.map((o, idx) => (
                                     <button key={idx} onClick={() => setOfertaSeleccionada(o)}
-                                            className={`flex items-center gap-3 p-3 rounded-2xl transition-all ${
-                                                ofertaSeleccionada === o ? 'bg-white text-blue-600 shadow-lg scale-[1.02]' : 'bg-white/10 text-white'
+                                            className={`flex items-center gap-4 w-full p-4 rounded-[2rem] transition-all border ${
+                                                ofertaSeleccionada === o
+                                                    ? 'bg-white text-blue-600 border-white shadow-xl scale-[1.03]'
+                                                    : 'bg-white/10 text-white border-white/10 hover:bg-white/20'
                                             }`}>
-                                        {o.foto && <img src={o.foto} onClick={(e) => { e.stopPropagation(); setFotoGrande(o.foto!); }}
-                                                        className="w-10 h-10 rounded-lg object-cover border border-white/20" />}
-                                        <div className="text-left flex-1">
-                                            <p className="text-[10px] font-black uppercase leading-none">{o.nombre}</p>
-                                            <p className={`text-[7px] font-bold ${ofertaSeleccionada === o ? 'text-blue-400' : 'text-white/60'}`}>{o.descripcion?.substring(0, 30)}...</p>
+                                        {o.foto && (
+                                            <img src={o.foto}
+                                                 onClick={(e) => { e.stopPropagation(); setFotoGrande(o.foto!); }}
+                                                 className="w-12 h-12 rounded-2xl object-cover shadow-md cursor-zoom-in"
+                                            />
+                                        )}
+                                        <div className="text-left flex-1 overflow-hidden">
+                                            <p className="text-[10px] font-black uppercase truncate">{o.nombre}</p>
+                                            <p className={`text-[7px] font-bold mt-0.5 truncate ${ofertaSeleccionada === o ? 'text-blue-400' : 'text-white/50'}`}>
+                                                {o.descripcion || 'Ver detalles...'}
+                                            </p>
                                         </div>
-                                        <span className="font-black text-[10px]">{o.precio}</span>
+                                        <span className="font-black text-[11px] whitespace-nowrap">{o.precio}</span>
                                     </button>
                                 ))}
                             </div>
                         )}
                     </div>
 
-                    {/* INPUTS DE CONTROL */}
-                    <div className="space-y-4">
-                        <div className="grid grid-cols-2 gap-4">
-                            <div className="space-y-2">
-                                <label className="text-[9px] font-black text-slate-400 uppercase ml-2">Método de Pago</label>
+                    {/* SELECTORES Y DATOS */}
+                    <div className="space-y-6">
+                        <div className="grid grid-cols-2 gap-5">
+                            <div className="space-y-3">
+                                <label className="text-[10px] font-black text-slate-400 uppercase ml-4 tracking-widest">Pago</label>
                                 <select value={pago} onChange={e => setPago(e.target.value)}
-                                        className="w-full bg-[#F0F2F5] p-4 rounded-2xl text-[10px] font-bold shadow-[inset_4px_4px_8px_#d1d9e6,inset_-4px_-4px_8px_#ffffff] outline-none">
+                                        className="w-full bg-[#F0F2F5] p-5 rounded-[1.8rem] text-[10px] font-black shadow-[inset_4px_4px_8px_#d1d9e6,inset_-4px_-4px_8px_#ffffff] outline-none appearance-none text-center">
                                     <option>Brasil (PIX)</option>
                                     <option>EE.UU (Zelle)</option>
+                                    <option>Europa (Euros)</option>
                                 </select>
                             </div>
-                            <div className="space-y-2">
-                                <label className="text-[9px] font-black text-slate-400 uppercase ml-2">Destinatario</label>
-                                <input type="text" value={numero} onChange={e => setNumero(e.target.value)} placeholder="Número"
-                                       className="w-full bg-[#F0F2F5] p-4 rounded-2xl text-[10px] font-bold shadow-[inset_4px_4px_8px_#d1d9e6,inset_-4px_-4px_8px_#ffffff] outline-none placeholder:text-slate-300" />
+                            <div className="space-y-3">
+                                <label className="text-[10px] font-black text-slate-400 uppercase ml-4 tracking-widest">Número/ID</label>
+                                <input type="text" value={numero} onChange={e => setNumero(e.target.value.replace(/\D/g, ''))}
+                                       placeholder="8 dígitos"
+                                       className="w-full bg-[#F0F2F5] p-5 rounded-[1.8rem] text-[10px] font-black shadow-[inset_4px_4px_8px_#d1d9e6,inset_-4px_-4px_8px_#ffffff] outline-none text-center placeholder:opacity-30" />
                             </div>
                         </div>
 
-                        {/* BOTÓN FINAL */}
-                        <button className="w-full bg-[#0084FF] py-5 rounded-[2rem] text-white font-black text-xs uppercase tracking-widest shadow-[0_10px_20px_rgba(0,132,255,0.3)] hover:scale-[1.02] active:scale-95 transition-all">
-                            Enviar Pedido
+                        {/* BOTÓN FINAL ACCIÓN */}
+                        <button onClick={enviarPedido}
+                                className="w-full bg-[#0084FF] py-6 rounded-[2.5rem] text-white font-black text-xs uppercase tracking-[0.3em] shadow-[0_15px_30px_rgba(0,132,255,0.35)] hover:bg-[#0070da] active:scale-95 transition-all mt-4">
+                            Confirmar Pedido 🚀
                         </button>
                     </div>
                 </div>
