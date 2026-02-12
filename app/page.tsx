@@ -91,20 +91,75 @@ export default function Home() {
                     </div>
                 </div>
 
-                {/* INFO BANNER */}
-                <div className="grid md:grid-cols-4 gap-4">
-                    {[
-                        {color: '#009739', t: 'PIX', d: 'Pago Local Brasil'},
-                        {color: '#002A8F', t: 'ETECSA', d: 'Recarga Directa'},
-                        {color: '#CF142B', t: 'COMBOS', d: 'Entrega en Mano'},
-                        {color: '#FFDF00', t: 'SEGURIDAD', d: 'Nexus Certified'}
-                    ].map((item, i) => (
-                        <div key={i} className="bg-white p-6 rounded-[2rem] border border-slate-100 shadow-sm hover:shadow-md transition-all group overflow-hidden relative">
-                            <div className="absolute top-0 left-0 w-1 h-full" style={{backgroundColor: item.color}}></div>
-                            <h4 className="font-black text-sm text-[#002A8F] mb-1">{item.t}</h4>
-                            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-tighter">{item.d}</p>
-                        </div>
-                    ))}
+                {/* INFO BANNER - DISEÑO "ELASTIC FLOW" */}
+                <div className="relative mt-12">
+                    {/* Línea decorativa de fondo (solo visible en desktop) */}
+                    <div className="hidden md:block absolute top-1/2 left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-slate-200 to-transparent -z-10"></div>
+
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-6 md:gap-4">
+                        {[
+                            {
+                                color: '#009739', // Verde Brasil
+                                icon: '💸',
+                                t: 'PAGO PIX',
+                                d: 'Instantáneo',
+                                bg: 'bg-green-50'
+                            },
+                            {
+                                color: '#002A8F', // Azul Cuba
+                                icon: '📲',
+                                t: 'RECARGA',
+                                d: 'Saldo Directo',
+                                bg: 'bg-blue-50'
+                            },
+                            {
+                                color: '#CF142B', // Rojo Cuba
+                                icon: '📦',
+                                t: 'COMBOS',
+                                d: 'Puerta a Puerta',
+                                bg: 'bg-red-50'
+                            },
+                            {
+                                color: '#FFDF00', // Amarillo Brasil
+                                icon: '🛡️',
+                                t: 'GARANTÍA',
+                                d: 'Nexus 24/7',
+                                bg: 'bg-yellow-50'
+                            }
+                        ].map((item, i) => (
+                            <div key={i} className="group relative flex flex-col items-center text-center">
+                                {/* Círculo con Icono y Efecto de Hover */}
+                                <div className={`relative w-16 h-16 mb-4 flex items-center justify-center rounded-2xl rotate-3 group-hover:rotate-0 transition-all duration-500 shadow-lg shadow-slate-200/50 ${item.bg}`}>
+                                    {/* Borde de color de la bandera */}
+                                    <div
+                                        className="absolute inset-0 rounded-2xl border-2 opacity-20 group-hover:opacity-100 transition-opacity"
+                                        style={{ borderColor: item.color }}
+                                    ></div>
+                                    <span className="text-2xl group-hover:scale-110 transition-transform duration-300">{item.icon}</span>
+                                </div>
+
+                                {/* Textos Estilizados */}
+                                <div className="space-y-1">
+                                    <h4 className="font-black text-[11px] tracking-[0.15em] text-slate-800 uppercase">
+                                        {item.t}
+                                    </h4>
+                                    <div className="flex items-center justify-center gap-2">
+                                        <span className="w-1 h-1 rounded-full" style={{ backgroundColor: item.color }}></span>
+                                        <p className="text-[9px] font-bold text-slate-400 uppercase tracking-tighter">
+                                            {item.d}
+                                        </p>
+                                    </div>
+                                </div>
+
+                                {/* Badge de Conector (solo en desktop entre elementos) */}
+                                {i < 3 && (
+                                    <div className="hidden md:block absolute top-8 -right-2 text-slate-200 font-light text-xl">
+                                        ›
+                                    </div>
+                                )}
+                            </div>
+                        ))}
+                    </div>
                 </div>
 
                 <footer className="mt-20 py-10 border-t border-slate-200 flex flex-col md:flex-row justify-between items-center gap-6">
