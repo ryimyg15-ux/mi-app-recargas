@@ -4,133 +4,141 @@ import { useState, useEffect } from 'react';
 import Papa from 'papaparse';
 
 export default function RecargaCard() {
+    // ESTADOS DE DATOS
+    const [tasasDinamicas, setTasasDinamicas] = useState({
+        r1: 92, r2: 96, r3: 97, r4: 98
+    });
     const [monto, setMonto] = useState<number>(100);
-    const [tasaBase, setTasaBase] = useState<number>(92);
     const [tipoDestino, setTipoDestino] = useState('CUP');
     const [numeroTarjeta, setNumeroTarjeta] = useState('');
     const [nombreTitular, setNombreTitular] = useState('');
+    const [cargando, setCargando] = useState(true);
 
-    // Tasas escalonadas según el monto (Lógica de negocio profesional)
-    const tasasEscalonadas = [
-        { rango: '10-99 BRL', tasa: 92, color: 'border-blue-200' },
-        { rango: '100-499 BRL', tasa: 96, color: 'border-green-200' },
-        { rango: '500-999 BRL', tasa: 97, color: 'border-orange-200' },
-        { rango: '1000+ BRL', tasa: 98, color: 'border-purple-200' },
-    ];
+    // 1. CARGA DE TASAS DESDE GOOGLE SHEETS
+    useEffect(() => {
+        const SHEET_ID = '1x4ClX7vmGGsfn2U7YmcS7Uq5VQm88-haaOvBDGsvvQs';
+        const URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&gid=0`;
 
-    // Determinar tasa actual
-    const tasaActual = monto >= 1000 ? 98 : monto >= 500 ? 97 : monto >= 100 ? 96 : 92;
+        Papa.parse(URL, {
+            download: true,
+            header: true,
+            complete: (res: any) => {
+                const data = res.data;
+
+                const obtenerTasa = (nombreFila: string, valorPorDefecto: number) => {
+                    const fila = data.find((f: any) => f.nombre?.trim().toLowerCase() === nombreFila.toLowerCase());
+                    if (fila && fila.precio) {
+                        const num = parseFloat(fila.precio.replace(/[^0-9.]/g, ''));
+                        return isNaN(num) ? valorPorDefecto : num;
+                    }
+                    return valorPorDefecto;
+                };
+
+                setTasasDinamicas({
+                    r1: obtenerTasa('Tasa Rango 1', 92),
+                    r2: obtenerTasa('Tasa Rango 2', 96),
+                    r3: obtenerTasa('Tasa Rango 3', 97),
+                    r4: obtenerTasa('Tasa Rango 4', 98)
+                });
+                setCargando(false);
+            }
+        });
+    }, []);
+
+    // 2. LÓGICA DE CÁLCULO
+    const tasaActual = monto >= 1000 ? tasasDinamicas.r4 :
+        monto >= 500  ? tasasDinamicas.r3 :
+            monto >= 100  ? tasasDinamicas.r2 : tasasDinamicas.r1;
 
     const abrirWhatsapp = (agente: string) => {
-        const mensaje = `*NUEVA OPERACIÓN*\n\n💰 *Monto:* ${monto} BRL\n📈 *Tasa aplicada:* 1:${tasaActual}\n🇨🇺 *Recibe en Cuba:* ${monto * tasaActual} CUP\n📍 *Destino:* ${tipoDestino}\n💳 *Tarjeta:* ${numeroTarjeta || 'N/A'}\n👤 *Titular:* ${nombreTitular || 'N/A'}`;
+        const mensaje = `*NEXUS R&DAY - OPERACIÓN*\n\n` +
+            `💰 *Envía:* ${monto} BRL\n` +
+            `📈 *Tasa:* 1:${tasaActual}\n` +
+            `🇨🇺 *Recibe:* ${(monto * tasaActual).toLocaleString()} CUP\n` +
+            `📍 *Destino:* ${tipoDestino}\n` +
+            `💳 *ID/Tarjeta:* ${numeroTarjeta || 'N/A'}\n` +
+            `👤 *Titular:* ${nombreTitular || 'N/A'}`;
+
         const telf = agente === 'Jonathan' ? '5547999222521' : '5547988884444';
         window.open(`https://wa.me/${telf}?text=${encodeURIComponent(mensaje)}`, '_blank');
     };
 
     return (
-        <div className="bg-white p-4 md:p-8 rounded-[2.5rem] shadow-sm max-w-2xl mx-auto border border-slate-100">
+        <div className="bg-white p-6 md:p-10 rounded-[3rem] shadow-xl max-w-2xl mx-auto border border-slate-50">
 
-            {/* 1. INDICADOR DE PAÍSES */}
-            <div className="flex justify-center items-center gap-3 mb-8">
-                <span className="text-2xl">🇧🇷</span>
-                <span className="text-slate-300">→</span>
-                <span className="text-2xl">🇨🇺</span>
+            {/* INDICADOR DE CONEXIÓN */}
+            <div className="flex justify-center items-center gap-4 mb-8">
+                <div className="flex items-center gap-2 bg-slate-100 px-3 py-1 rounded-full">
+                    <span className="text-sm">🇧🇷</span>
+                    <span className="text-[10px] font-black text-slate-500 tracking-tighter uppercase">Brasil</span>
+                </div>
+                <div className="h-[1px] w-8 bg-blue-200"></div>
+                <div className="flex items-center gap-2 bg-slate-100 px-3 py-1 rounded-full">
+                    <span className="text-sm">🇨🇺</span>
+                    <span className="text-[10px] font-black text-slate-500 tracking-tighter uppercase">Cuba</span>
+                </div>
             </div>
 
-            <h2 className="text-center text-[#002A8F] font-bold text-xl mb-6">Brasil → Cuba (Transferencia)</h2>
-
-            {/* 2. GRID DE TASAS ESCALONADAS */}
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-2 mb-8">
-                {tasasEscalonadas.map((t, i) => (
-                    <div key={i} className={`p-3 rounded-2xl border-2 text-center transition-all ${tasaActual === t.tasa ? 'bg-blue-50 border-blue-500 scale-105 shadow-md' : 'bg-slate-50 border-transparent opacity-60'}`}>
-                        <p className="text-[8px] font-black text-slate-400 uppercase">{t.rango}</p>
-                        <p className="text-xl font-black text-[#002A8F]">{t.tasa}</p>
-                        <p className="text-[8px] font-bold text-slate-500 uppercase">CUP/BRL</p>
+            {/* TABLERO DE TASAS DINÁMICAS */}
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-8">
+                {[
+                    { r: '10-99', v: tasasDinamicas.r1 },
+                    { r: '100-499', v: tasasDinamicas.r2 },
+                    { r: '500-999', v: tasasDinamicas.r3 },
+                    { r: '1000+', v: tasasDinamicas.r4 }
+                ].map((t, i) => (
+                    <div key={i} className={`p-4 rounded-3xl border-2 transition-all duration-500 ${tasaActual === t.v ? 'bg-blue-600 border-blue-600 shadow-blue-200 shadow-lg -translate-y-1' : 'bg-slate-50 border-transparent opacity-50'}`}>
+                        <p className={`text-[7px] font-black uppercase mb-1 ${tasaActual === t.v ? 'text-blue-100' : 'text-slate-400'}`}>{t.r} BRL</p>
+                        <p className={`text-xl font-black ${tasaActual === t.v ? 'text-white' : 'text-[#002A8F]'}`}>{t.v}</p>
                     </div>
                 ))}
             </div>
 
-            {/* 3. SELECTOR DE DESTINO */}
-            <div className="grid grid-cols-3 gap-3 mb-8">
-                {[
-                    { id: 'CUP', label: 'CUP', sub: 'Tradicional', icon: '🏛️', color: 'blue' },
-                    { id: 'CLASSIC', label: 'Clásica', sub: 'Mínimo 20 USD', icon: '💳', color: 'orange' },
-                    { id: 'TROPICAL', label: 'Tráfico', sub: 'Sin comisión', icon: '🟢', color: 'emerald' },
-                ].map((item) => (
-                    <button key={item.id} onClick={() => setTipoDestino(item.id)}
-                            className={`p-4 rounded-3xl border-2 flex flex-col items-center transition-all ${tipoDestino === item.id ? 'border-blue-500 bg-white shadow-lg' : 'border-slate-100 bg-slate-50 opacity-50'}`}>
-                        <span className="text-xl mb-1">{item.icon}</span>
-                        <p className="text-[10px] font-black uppercase text-slate-800">{item.label}</p>
-                        <p className="text-[8px] text-slate-400 font-bold">{item.sub}</p>
+            {/* CALCULADORA */}
+            <div className="space-y-6">
+                <div className="bg-slate-50 p-8 rounded-[2.5rem] border border-slate-100">
+                    <div className="flex justify-between mb-4 px-2">
+                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Monto a enviar</label>
+                        <span className="text-[10px] font-black text-blue-600 uppercase">BRL (PIX)</span>
+                    </div>
+                    <div className="relative">
+                        <input type="number" value={monto} onChange={(e) => setMonto(Number(e.target.value))}
+                               className="w-full bg-white p-5 rounded-[1.5rem] text-3xl font-black text-[#002A8F] outline-none shadow-inner border-2 border-transparent focus:border-blue-500 transition-all" />
+                        <span className="absolute right-6 top-1/2 -translate-y-1/2 text-slate-300 font-bold">R$</span>
+                    </div>
+                </div>
+
+                {/* RESULTADO (GREEN CARD) */}
+                <div className="bg-gradient-to-br from-[#009739] to-[#007a2e] p-8 rounded-[2.5rem] text-white shadow-2xl relative overflow-hidden">
+                    <div className="absolute top-0 right-0 p-4 opacity-10 text-6xl italic font-black">CUP</div>
+                    <p className="text-[10px] font-black uppercase tracking-widest opacity-70 mb-2">Total que reciben en Cuba</p>
+                    <div className="flex items-baseline gap-2">
+                        <span className="text-4xl font-black">{(monto * tasaActual).toLocaleString()}</span>
+                        <span className="text-lg font-bold">CUP</span>
+                    </div>
+                    <div className="mt-4 pt-4 border-t border-white/20 flex justify-between items-center">
+                        <span className="text-[9px] font-black uppercase opacity-60">Tasa Aplicada</span>
+                        <span className="bg-white/20 px-3 py-1 rounded-full text-[10px] font-bold">1 BRL = {tasaActual} CUP</span>
+                    </div>
+                </div>
+
+                {/* BOTONES WHATSAPP */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <button onClick={() => abrirWhatsapp('Jonathan')}
+                            className="bg-[#25D366] hover:bg-[#1fb355] text-white p-5 rounded-3xl font-black text-[10px] uppercase tracking-widest shadow-lg transition-all active:scale-95">
+                        Hablar con Jonathan
                     </button>
-                ))}
-            </div>
-
-            {/* 4. INPUT DE MONTO */}
-            <div className="bg-slate-50 p-6 rounded-[2rem] border border-slate-100 mb-6">
-                <label className="text-[10px] font-black text-slate-400 uppercase mb-2 block ml-2">Monto a enviar (BRL)</label>
-                <div className="relative">
-                    <span className="absolute left-4 top-1/2 -translate-y-1/2 font-black text-slate-400">R$</span>
-                    <input type="number" value={monto} onChange={(e) => setMonto(Number(e.target.value))}
-                           className="w-full bg-white p-4 pl-12 rounded-2xl text-xl font-black text-[#002A8F] outline-none border-2 border-transparent focus:border-blue-500 transition-all shadow-inner" />
+                    <button onClick={() => abrirWhatsapp('David')}
+                            className="bg-[#002A8F] hover:bg-[#001f6d] text-white p-5 rounded-3xl font-black text-[10px] uppercase tracking-widest shadow-lg transition-all active:scale-95">
+                        Hablar con David
+                    </button>
                 </div>
             </div>
 
-            {/* 5. RESULTADO DEL CÁLCULO */}
-            <div className="bg-emerald-50/50 p-6 rounded-[2rem] border-2 border-emerald-100 mb-8 space-y-3">
-                <div className="flex justify-between text-sm">
-                    <span className="text-slate-500 font-medium">Monto enviado:</span>
-                    <span className="font-bold">R$ {monto.toLocaleString()}</span>
-                </div>
-                <div className="flex justify-between text-sm">
-                    <span className="text-slate-500 font-medium">Tasa aplicada:</span>
-                    <span className="text-blue-600 font-black">1 BRL = {tasaActual} CUP</span>
-                </div>
-                <div className="h-[1px] bg-emerald-200/50 w-full my-2"></div>
-                <div className="flex justify-between items-center">
-                    <span className="text-emerald-700 font-black text-sm uppercase">Recibirá en Cuba:</span>
-                    <span className="text-3xl font-black text-emerald-600">{(monto * tasaActual).toLocaleString()} <small className="text-sm">CUP</small></span>
-                </div>
-            </div>
-
-            {/* 6. DATOS OPCIONALES */}
-            <div className="space-y-3 mb-8">
-                <input type="text" placeholder="Número de tarjeta o cuenta (Opcional)" value={numeroTarjeta} onChange={(e) => setNumeroTarjeta(e.target.value)}
-                       className="w-full bg-slate-50 p-4 rounded-2xl text-xs font-bold border border-slate-100 outline-none focus:bg-white" />
-                <input type="text" placeholder="Nombre completo del beneficiario" value={nombreTitular} onChange={(e) => setNombreTitular(e.target.value)}
-                       className="w-full bg-slate-50 p-4 rounded-2xl text-xs font-bold border border-slate-100 outline-none focus:bg-white" />
-            </div>
-
-            {/* 7. BOTONES DE ACCIÓN */}
-            <div className="space-y-3">
-                <p className="text-center text-[9px] font-black text-slate-400 uppercase mb-4 tracking-widest italic">Selecciona un contacto para continuar:</p>
-                <button onClick={() => abrirWhatsapp('Jonathan')}
-                        className="w-full bg-[#25D366] text-white py-4 rounded-2xl font-black text-xs uppercase tracking-widest flex items-center justify-center gap-3 shadow-lg hover:brightness-95 transition-all">
-                    <span>WhatsApp Jonathan</span>
-                    <span className="opacity-60 text-[8px]">+55 47 99222-2521</span>
-                </button>
-                <button onClick={() => abrirWhatsapp('David')}
-                        className="w-full bg-[#128C7E] text-white py-4 rounded-2xl font-black text-xs uppercase tracking-widest flex items-center justify-center gap-3 shadow-lg hover:brightness-95 transition-all">
-                    <span>WhatsApp David</span>
-                    <span className="opacity-60 text-[8px]">+55 47 98844-4444</span>
-                </button>
-            </div>
-
-            {/* FOOTER DE CONFIANZA */}
-            <div className="grid grid-cols-3 gap-2 mt-8 opacity-40 grayscale">
-                <div className="flex flex-col items-center">
-                    <span className="text-xs">⚡</span>
-                    <span className="text-[7px] font-black uppercase">Entrega Rápida</span>
-                </div>
-                <div className="flex flex-col items-center">
-                    <span className="text-xs">🛡️</span>
-                    <span className="text-[7px] font-black uppercase">Pago Seguro</span>
-                </div>
-                <div className="flex flex-col items-center">
-                    <span className="text-xs">💬</span>
-                    <span className="text-[7px] font-black uppercase">Soporte 24/7</span>
-                </div>
-            </div>
+            {/* SEGURIDAD */}
+            <p className="text-center text-[8px] font-black text-slate-300 uppercase tracking-[0.3em] mt-8 italic">
+                Operación Protegida por Nexus R&Day Systems
+            </p>
         </div>
     );
 }
