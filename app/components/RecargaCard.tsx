@@ -3,7 +3,7 @@ import { useState, useEffect, useMemo } from 'react';
 // @ts-ignore
 import Papa from 'papaparse';
 
-export default function NexusUltra() {
+export default function NexusUltimate() {
     const [todasLasOfertas, setTodasLasOfertas] = useState<any[]>([]);
     const [categoriaActiva, setCategoriaActiva] = useState('RECARGAS');
     const [servicio, setServicio] = useState('Recarga (ETECSA)');
@@ -12,7 +12,7 @@ export default function NexusUltra() {
     const [numero, setNumero] = useState('');
     const [fotoGrande, setFotoGrande] = useState<string | null>(null);
 
-    // Carga de datos desde tu Excel
+    // Carga de datos
     useEffect(() => {
         const SHEET_ID = '1x4ClX7vmGGsfn2U7YmcS7Uq5VQm88-haaOvBDGsvvQs';
         const URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&gid=0`;
@@ -37,166 +37,145 @@ export default function NexusUltra() {
     }, []);
 
     const tasaActual = monto >= 1000 ? tasas.r4 : monto >= 500 ? tasas.r3 : monto >= 100 ? tasas.r2 : tasas.r1;
-    const ofertasFiltradas = todasLasOfertas.filter(o => o.categoria?.trim().toLowerCase() === servicio.trim().toLowerCase());
+
+    // Lógica de la Barra de Progreso (Basada en 10 dígitos)
+    const progreso = Math.min((numero.length / 10) * 100, 100);
+    const esNumeroValido = numero.length >= 8;
 
     return (
-        <main className="min-h-screen bg-[#030712] text-slate-100 font-sans selection:bg-blue-500/30 overflow-hidden relative">
+        <main className="min-h-screen bg-[#02040a] text-slate-100 font-sans selection:bg-blue-500/30 overflow-hidden relative">
 
-            {/* SISTEMA DE PARTÍCULAS DIGITALES */}
+            {/* BACKGROUND ANIMADO */}
             <div className="absolute inset-0 overflow-hidden pointer-events-none">
-                {[...Array(20)].map((_, i) => (
-                    <div
-                        key={i}
-                        className="absolute bg-blue-500/20 rounded-full blur-xl animate-pulse"
-                        style={{
-                            width: `${Math.random() * 300 + 50}px`,
-                            height: `${Math.random() * 300 + 50}px`,
-                            top: `${Math.random() * 100}%`,
-                            left: `${Math.random() * 100}%`,
-                            animationDuration: `${Math.random() * 10 + 5}s`,
-                            animationDelay: `${Math.random() * 5}s`,
-                        }}
-                    />
-                ))}
+                <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-blue-600/10 rounded-full blur-[120px] animate-pulse"></div>
+                <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-emerald-500/10 rounded-full blur-[120px] animate-pulse" style={{animationDelay: '2s'}}></div>
             </div>
 
-            {/* MALLA DE FONDO (GRID) */}
-            <div className="absolute inset-0 bg-[linear-gradient(to_right,#1f2937_1px,transparent_1px),linear-gradient(to_bottom,#1f2937_1px,transparent_1px)] bg-[size:60px_60px] [mask-image:radial-gradient(ellipse_60%_50%_at_50%_0%,#000_70%,transparent_100%)] opacity-20"></div>
+            <div className="relative z-10 max-w-6xl mx-auto px-6 py-12">
 
-            <div className="relative z-10 max-w-7xl mx-auto px-6 py-12">
-
-                {/* NAV ESTILO CRISTAL */}
-                <nav className="flex justify-between items-center mb-24 bg-white/[0.03] backdrop-blur-md border border-white/10 p-5 rounded-3xl">
-                    <div className="flex items-center gap-4">
-                        <div className="w-10 h-10 bg-gradient-to-br from-[#009739] to-[#002A8F] rounded-xl flex items-center justify-center font-black text-xl italic shadow-blue-500/20 shadow-lg">N</div>
-                        <h1 className="font-black tracking-[0.2em] text-sm uppercase">Nexus <span className="text-blue-500">Premium</span></h1>
+                {/* HEADER */}
+                <header className="flex justify-between items-center mb-16">
+                    <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center shadow-[0_0_20px_rgba(255,255,255,0.1)]">
+                            <span className="text-black font-black text-xl italic">N</span>
+                        </div>
+                        <h1 className="font-black tracking-[0.3em] text-[10px] uppercase">Nexus <span className="text-blue-500">Systems</span></h1>
                     </div>
-                    <div className="hidden md:flex gap-8 items-center">
-                        <span className="text-[10px] font-black tracking-widest uppercase opacity-40">Status: <span className="text-emerald-500">Online</span></span>
-                        <div className="h-4 w-[1px] bg-white/10"></div>
-                        <button className="bg-white text-black px-6 py-2 rounded-full text-[10px] font-black uppercase tracking-widest hover:bg-blue-500 hover:text-white transition-all">Soporte</button>
-                    </div>
-                </nav>
+                </header>
 
                 <div className="grid lg:grid-cols-2 gap-16 items-center">
 
-                    {/* TEXTO DE IMPACTO */}
-                    <div className="space-y-10">
-                        <div className="inline-flex items-center gap-3 bg-white/5 border border-white/10 px-4 py-2 rounded-full">
-                            <span className="w-2 h-2 bg-emerald-500 rounded-full animate-ping"></span>
-                            <span className="text-[9px] font-black uppercase tracking-[0.2em]">Sincronización en tiempo real</span>
-                        </div>
-                        <h2 className="text-7xl md:text-9xl font-black leading-[0.8] tracking-tighter italic uppercase">
-                            Connect <br />
-                            <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#009739] via-white to-[#CF142B]">Global.</span>
+                    {/* COLUMNA INFO */}
+                    <div className="space-y-8">
+                        <h2 className="text-7xl md:text-9xl font-black leading-none tracking-tighter uppercase italic">
+                            Fast <br /> <span className="text-blue-500">Flow.</span>
                         </h2>
-                        <p className="text-slate-500 text-xl font-medium max-w-md leading-relaxed">
-                            Infraestructura avanzada para el envío de remesas y servicios digitales entre <span className="text-white">Brasil</span> y <span className="text-white">Cuba</span>.
+                        <p className="text-slate-500 text-lg max-w-sm">
+                            La plataforma de enlace directo entre el sistema bancario de <span className="text-white">Brasil</span> y servicios en <span className="text-white">Cuba</span>.
                         </p>
-
-                        <div className="flex items-center gap-8 opacity-40">
-                            <div className="text-center">
-                                <p className="text-2xl font-black">99.9%</p>
-                                <p className="text-[8px] font-black uppercase tracking-widest">Uptime</p>
-                            </div>
-                            <div className="text-center">
-                                <p className="text-2xl font-black">AES-256</p>
-                                <p className="text-[8px] font-black uppercase tracking-widest">Cifrado</p>
-                            </div>
-                        </div>
                     </div>
 
-                    {/* INTERFAZ "NEXUS GLASS" */}
+                    {/* INTERFAZ APP */}
                     <div className="relative">
-                        {/* Brillo perimetral */}
-                        <div className="absolute -inset-1 bg-gradient-to-r from-blue-600 via-emerald-500 to-red-500 rounded-[3rem] blur-xl opacity-20 animate-pulse"></div>
+                        {/* Brillo dinámico si el número es válido */}
+                        <div className={`absolute -inset-1 rounded-[3rem] blur-2xl transition-all duration-1000 ${esNumeroValido ? 'bg-emerald-500/20 opacity-100' : 'bg-blue-500/10 opacity-50'}`}></div>
 
-                        <div className="relative bg-[#0A0F1E]/80 backdrop-blur-2xl border border-white/10 rounded-[3rem] p-8 shadow-2xl">
+                        <div className="relative bg-[#0d111c] border border-white/5 rounded-[2.5rem] p-8 shadow-2xl overflow-hidden">
+
+                            {/* BARRA DE PROGRESO SUPERIOR */}
+                            <div className="absolute top-0 left-0 w-full h-1 bg-white/5">
+                                <div
+                                    className="h-full bg-gradient-to-r from-blue-500 to-emerald-400 transition-all duration-500 shadow-[0_0_15px_rgba(59,130,246,0.5)]"
+                                    style={{ width: `${progreso}%` }}
+                                ></div>
+                            </div>
 
                             {/* SELECTOR CATEGORÍAS */}
-                            <div className="grid grid-cols-3 gap-3 mb-12">
-                                {[
-                                    {id:'RECARGAS', icon:'📱'}, {id:'TIENDA', icon:'🛒'}, {id:'DINERO', icon:'💸'}
-                                ].map(cat => (
-                                    <button key={cat.id} onClick={() => setCategoriaActiva(cat.id)}
-                                            className={`flex flex-col items-center py-4 rounded-[2rem] transition-all border ${categoriaActiva === cat.id ? 'bg-blue-600/20 border-blue-500 text-white shadow-lg' : 'bg-white/5 border-transparent text-white/40 opacity-50 hover:opacity-100'}`}>
-                                        <span className="text-xl mb-1">{cat.icon}</span>
-                                        <span className="text-[8px] font-black tracking-widest uppercase">{cat.id}</span>
+                            <div className="grid grid-cols-3 gap-2 mb-10">
+                                {['RECARGAS', 'TIENDA', 'DINERO'].map(cat => (
+                                    <button key={cat} onClick={() => setCategoriaActiva(cat)}
+                                            className={`py-3 rounded-2xl text-[8px] font-black tracking-widest transition-all ${categoriaActiva === cat ? 'bg-white text-black' : 'bg-white/5 text-slate-500 hover:text-white'}`}>
+                                        {cat}
                                     </button>
                                 ))}
                             </div>
 
-                            {/* CALCULADORA / LISTA */}
-                            <div className="min-h-[300px]">
+                            {/* ÁREA DE TRABAJO */}
+                            <div className="min-h-[260px] flex flex-col justify-center">
                                 {categoriaActiva === 'DINERO' ? (
-                                    <div className="space-y-8 animate-in fade-in duration-700">
-                                        <div className="bg-white/[0.03] p-8 rounded-[2.5rem] border border-white/5">
-                                            <p className="text-[9px] font-black text-slate-500 uppercase tracking-widest mb-4">Monto Envío (BRL)</p>
-                                            <div className="flex items-baseline gap-4">
-                                                <input type="number" value={monto} onChange={e => setMonto(Number(e.target.value))} className="bg-transparent text-5xl font-black outline-none w-full text-blue-500" />
-                                                <span className="text-2xl font-black opacity-20 italic text-white">BRL</span>
-                                            </div>
+                                    <div className="space-y-6">
+                                        <div className="bg-white/[0.02] p-6 rounded-3xl border border-white/5">
+                                            <label className="text-[8px] font-black text-slate-500 uppercase tracking-widest block mb-2">Monto PIX (BRL)</label>
+                                            <input type="number" value={monto} onChange={e => setMonto(Number(e.target.value))}
+                                                   className="bg-transparent text-5xl font-black w-full outline-none text-white" />
                                         </div>
-
-                                        <div className="bg-gradient-to-br from-[#009739] to-[#014d1d] p-8 rounded-[2.5rem] shadow-2xl relative overflow-hidden group">
-                                            <div className="absolute -right-4 -top-4 text-9xl font-black italic opacity-10 group-hover:scale-110 transition-transform">CU</div>
-                                            <p className="text-[9px] font-black uppercase tracking-widest text-white/60 mb-2">Total Recibido (CUP)</p>
-                                            <div className="flex items-baseline gap-2">
-                                                <span className="text-5xl font-black">{(monto * tasaActual).toLocaleString()}</span>
-                                                <span className="text-xl font-black">CUP</span>
+                                        <div className="flex items-center justify-between p-6 bg-blue-600 rounded-3xl shadow-xl shadow-blue-900/20">
+                                            <div>
+                                                <p className="text-[8px] font-black uppercase opacity-60 mb-1 text-white">Reciben en Cuba</p>
+                                                <p className="text-4xl font-black text-white">{(monto * tasaActual).toLocaleString()} <span className="text-sm opacity-50 font-bold">CUP</span></p>
                                             </div>
-                                            <div className="mt-6 flex justify-between items-center bg-black/20 p-3 rounded-2xl">
-                                                <span className="text-[8px] font-black uppercase tracking-widest opacity-60">Tasa Aplicada</span>
-                                                <span className="text-xs font-black">1 : {tasaActual}</span>
+                                            <div className="text-right">
+                                                <p className="text-[8px] font-black uppercase opacity-60 mb-1 text-white">Tasa</p>
+                                                <p className="text-sm font-black text-white">1:{tasaActual}</p>
                                             </div>
                                         </div>
                                     </div>
                                 ) : (
-                                    <div className="space-y-3 max-h-[350px] overflow-y-auto pr-2 no-scrollbar animate-in slide-in-from-bottom-4 duration-500">
-                                        {todasLasOfertas.filter(o => o.categoria?.toLowerCase().includes(categoriaActiva.toLowerCase().slice(0,4))).map((o, i) => (
-                                            <div key={i} className="flex items-center gap-4 p-4 bg-white/[0.03] border border-white/5 rounded-3xl hover:bg-white/[0.08] transition-all">
-                                                <div className="w-12 h-12 bg-white/10 rounded-2xl flex items-center justify-center text-xl shadow-inner">📦</div>
-                                                <div className="flex-1">
-                                                    <h4 className="text-[10px] font-black uppercase tracking-tight">{o.nombre}</h4>
-                                                    <p className="text-[8px] font-bold text-slate-500 uppercase tracking-tighter">{o.descripcion?.slice(0, 40)}...</p>
+                                    <div className="grid grid-cols-1 gap-3 max-h-[260px] overflow-y-auto no-scrollbar">
+                                        {todasLasOfertas.filter(o => o.categoria?.toLowerCase().includes(categoriaActiva.toLowerCase().slice(0,3))).map((o, i) => (
+                                            <div key={i} className="flex justify-between items-center p-4 bg-white/5 rounded-2xl border border-white/5 hover:border-blue-500/30 transition-all group">
+                                                <div>
+                                                    <p className="text-[9px] font-black uppercase">{o.nombre}</p>
+                                                    <p className="text-[7px] text-slate-500 font-bold uppercase tracking-tighter">{o.descripcion?.slice(0,30)}</p>
                                                 </div>
-                                                <p className="text-xs font-black text-blue-400">{o.precio}</p>
+                                                <p className="text-xs font-black text-emerald-500">{o.precio}</p>
                                             </div>
                                         ))}
                                     </div>
                                 )}
                             </div>
 
-                            {/* FOOTER ACCIÓN */}
-                            <div className="mt-12 space-y-4">
-                                <div className="relative">
-                                    <input type="text" placeholder="ID DE DESTINO / NÚMERO" value={numero} onChange={e => setNumero(e.target.value)}
-                                           className="w-full bg-white/5 border border-white/10 p-5 rounded-2xl text-center font-black tracking-[0.2em] text-xs focus:border-blue-500 outline-none uppercase transition-all" />
+                            {/* SECCIÓN DE DESTINO CON PROGRESO */}
+                            <div className="mt-10 space-y-6">
+                                <div className="relative group">
+                                    <input
+                                        type="text"
+                                        placeholder="NÚMERO DE DESTINO"
+                                        value={numero}
+                                        onChange={e => setNumero(e.target.value.replace(/\D/g, ''))}
+                                        className="w-full bg-white/5 border border-white/10 p-5 rounded-2xl text-center font-black tracking-[0.3em] text-xs focus:bg-white/[0.08] transition-all outline-none"
+                                    />
+                                    {/* Indicador de "Listo" */}
+                                    {esNumeroValido && (
+                                        <div className="absolute right-4 top-1/2 -translate-y-1/2 text-emerald-500 animate-bounce">
+                                            ✓
+                                        </div>
+                                    )}
                                 </div>
+
                                 <div className="grid grid-cols-2 gap-4">
-                                    <button className="bg-white text-black py-5 rounded-3xl font-black text-[9px] uppercase tracking-widest hover:scale-105 active:scale-95 transition-all shadow-xl">Contacto David</button>
-                                    <button className="bg-blue-600 text-white py-5 rounded-3xl font-black text-[9px] uppercase tracking-widest hover:scale-105 active:scale-95 transition-all shadow-xl shadow-blue-500/20">Contacto Jonathan</button>
+                                    <button className="bg-white text-black py-5 rounded-2xl font-black text-[9px] uppercase tracking-widest hover:invert transition-all active:scale-95">
+                                        Jonathan Pay
+                                    </button>
+                                    <button className="bg-blue-600 text-white py-5 rounded-2xl font-black text-[9px] uppercase tracking-widest hover:brightness-125 transition-all active:scale-95">
+                                        David Pay
+                                    </button>
                                 </div>
                             </div>
                         </div>
                     </div>
                 </div>
 
-                {/* MARCAS DE CONFIANZA */}
-                <div className="mt-32 pt-10 border-t border-white/5 flex flex-wrap justify-center gap-12 opacity-20 grayscale">
-                    <span className="text-2xl font-black italic">PIX PAYMENT</span>
-                    <span className="text-2xl font-black italic">ZELLE PRO</span>
-                    <span className="text-2xl font-black italic">ETECSA HUB</span>
-                    <span className="text-2xl font-black italic">BANK TRANSFER</span>
-                </div>
+                {/* FOOTER */}
+                <footer className="mt-32 opacity-20 flex justify-between items-center border-t border-white/10 pt-8">
+                    <p className="text-[8px] font-black tracking-[0.5em] uppercase">© 2026 Nexus R&Day Logistics</p>
+                    <div className="flex gap-6 font-black italic text-xs">
+                        <span>SSL</span>
+                        <span>PIX</span>
+                        <span>CUP</span>
+                    </div>
+                </footer>
             </div>
-
-            {/* MODAL IMAGEN */}
-            {fotoGrande && (
-                <div className="fixed inset-0 z-[100] bg-black/95 backdrop-blur-3xl flex items-center justify-center p-6" onClick={() => setFotoGrande(null)}>
-                    <img src={fotoGrande} className="max-w-full max-h-[80vh] rounded-[3rem] shadow-2xl border border-white/10" />
-                </div>
-            )}
         </main>
     );
 }
